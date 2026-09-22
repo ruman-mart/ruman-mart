@@ -11,7 +11,8 @@ type OrderItem = {
   name: string;
   specs?: string[];
   price: number;
-  quantity: number;
+  quantity?: number;
+  qty?: number;
   image: string;
 };
 

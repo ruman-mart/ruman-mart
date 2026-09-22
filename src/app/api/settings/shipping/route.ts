@@ -18,13 +18,14 @@ function isAuthorized() {
 
 export async function GET() {
   await runMigrations();
-  let settings = await ShippingSettings.findByPk(1, { raw: true }) as unknown as Record<string, string | boolean> | null;
+  let settings = await ShippingSettings.findByPk(1, { raw: true }) as unknown as Record<string, unknown> | null;
   if (!settings) {
     settings = { rates: JSON.stringify(defaultRates), advanceShipping: false };
   }
   let rates = defaultRates;
-  try { rates = { ...defaultRates, ...JSON.parse(settings.rates ?? "{}") }; } catch { /* use defaults */ }
-  return NextResponse.json({ rates, advanceShipping: Boolean(settings.advanceShipping), advanceAccountNumber: settings.advanceAccountNumber ?? "", advanceAccountTitle: settings.advanceAccountTitle ?? "", advanceAccountName: settings.advanceAccountName ?? "", logoUrl: settings.logoUrl ?? "/logo-web.png", storeAddress: settings.storeAddress ?? "RC7C+294 Shakeel General Store, Misri St, Hala, Pakistan", storePhone: settings.storePhone ?? "+92 304 1298136", storeEmail: settings.storeEmail ?? "rumanshakee56@gmail.com", facebookUrl: settings.facebookUrl ?? "", instagramUrl: settings.instagramUrl ?? "", tiktokUrl: settings.tiktokUrl ?? "", whatsappUrl: normalizeWhatsappUrl(String(settings.whatsappUrl ?? "")) });
+  const rawRates = typeof settings.rates === "string" ? settings.rates : "{}";
+  try { rates = { ...defaultRates, ...JSON.parse(rawRates) }; } catch { /* use defaults */ }
+  return NextResponse.json({ rates, advanceShipping: Boolean(settings.advanceShipping), advanceAccountNumber: String(settings.advanceAccountNumber ?? ""), advanceAccountTitle: String(settings.advanceAccountTitle ?? ""), advanceAccountName: String(settings.advanceAccountName ?? ""), logoUrl: String(settings.logoUrl ?? "/logo-web.png"), storeAddress: String(settings.storeAddress ?? "RC7C+294 Shakeel General Store, Misri St, Hala, Pakistan"), storePhone: String(settings.storePhone ?? "+92 304 1298136"), storeEmail: String(settings.storeEmail ?? "rumanshakee56@gmail.com"), facebookUrl: String(settings.facebookUrl ?? ""), instagramUrl: String(settings.instagramUrl ?? ""), tiktokUrl: String(settings.tiktokUrl ?? ""), whatsappUrl: normalizeWhatsappUrl(String(settings.whatsappUrl ?? "")) });
 }
 
 export async function PUT(request: Request) {

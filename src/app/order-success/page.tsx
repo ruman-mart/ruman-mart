@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -84,17 +84,25 @@ function StarRating({ rating, size = 11 }: { rating: number; size?: number }) {
 }
 
 export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f5f7fb] text-slate-500">Loading order details...</div>}>
+      <OrderSuccessPageContent />
+    </Suspense>
+  );
+}
+
+function OrderSuccessPageContent() {
   const searchParams = useSearchParams();
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [orderDetails, setOrderDetails] = useState<OrderSnapshot>({
     orderNumber: searchParams.get("order") ?? "RM-000000",
     orderDate: new Date().toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }),
     paymentMethod: "Cash on Delivery",
-    items: orderItems,
-    subtotal: orderItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+    items: orderItems.map((item) => ({ ...item, qty: Number(item.qty ?? item.quantity ?? 1) })),
+    subtotal: orderItems.reduce((sum, item) => sum + item.price * Number(item.qty ?? item.quantity ?? 1), 0),
     shippingCost: 0,
     discount: 0,
-    total: orderItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+    total: orderItems.reduce((sum, item) => sum + item.price * Number(item.qty ?? item.quantity ?? 1), 0),
   });
 
   useEffect(() => {
@@ -171,7 +179,10 @@ export default function OrderSuccessPage() {
       .catch(() => setRelatedProducts([]));
   }, [orderDetails.items]);
 
-  const subtotal = useMemo(() => orderDetails.items.reduce((sum, item) => sum + Number(item.price) * Number(item.qty ?? item.quantity ?? 1), 0), [orderDetails.items]);
+  const subtotal = useMemo(() => orderDetails.items.reduce((sum, item) => {
+    const quantity = Number(item.qty ?? item.quantity ?? 1);
+    return sum + Number(item.price) * quantity;
+  }, 0), [orderDetails.items]);
   const shipping = orderDetails.shippingCost;
   const discount = orderDetails.discount;
   const total = orderDetails.total || subtotal + shipping - discount;
