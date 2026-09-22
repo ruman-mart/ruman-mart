@@ -83,7 +83,7 @@ export default function AboutPage() {
     aria-hidden="true"
   />
 
-  <div className="relative mx-auto flex min-h-[400px] max-w-[1400px] items-center px-5 py-7 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
+  <div className="relative mx-auto flex min-h-[400px] max-w-[1800px] items-center px-5 py-7 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
     <div className="max-w-xl text-white">
 
       {/* Breadcrumb - mobile par hidden */}
@@ -118,7 +118,7 @@ export default function AboutPage() {
 
         {/* Welcome */}
         <section className="bg-white py-10 sm:py-14">
-          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+          <div className="mx-auto max-w-[1800px] px-4 md:px-8">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0b75a5]">
                 Welcome to Ruman Mart
@@ -142,7 +142,7 @@ export default function AboutPage() {
 
       {/* Our Story */}
 <section className="bg-[#f5f7fb] py-10 sm:py-14">
-  <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 px-4 md:px-8 lg:grid-cols-2 lg:items-center lg:gap-12">
+  <div className="mx-auto grid max-w-[1800px] grid-cols-1 gap-8 px-4 md:px-8 lg:grid-cols-2 lg:items-center lg:gap-12">
     <div>
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0b75a5]">
         Our Story
@@ -181,7 +181,7 @@ export default function AboutPage() {
 
         {/* Why Choose Us */}
         <section className="bg-white py-10 sm:py-14">
-          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+          <div className="mx-auto max-w-[1800px] px-4 md:px-8">
             <div className="max-w-2xl">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0b75a5]">
                 Why Choose Ruman Mart?
@@ -210,7 +210,7 @@ export default function AboutPage() {
 
         {/* Our Vision */}
         <section className="bg-[#0b1d45] py-10 sm:py-14">
-          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+          <div className="mx-auto max-w-[1800px] px-4 md:px-8">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#19d5f2]">
                 Our Vision
@@ -231,7 +231,7 @@ export default function AboutPage() {
 
         {/* Our Commitment */}
         <section className="bg-[#f5f7fb] py-10 sm:py-14">
-          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+          <div className="mx-auto max-w-[1800px] px-4 md:px-8">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#0b75a5]">
               Our Commitment
             </p>
@@ -257,7 +257,7 @@ export default function AboutPage() {
 
         {/* Connect With Us */}
         <section className="bg-white py-10 sm:py-14">
-          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+          <div className="mx-auto max-w-[1800px] px-4 md:px-8">
             <div className="grid grid-cols-1 gap-8 rounded-2xl bg-gradient-to-r from-[#031a3b] to-[#0b1d45] p-6 sm:p-10 lg:grid-cols-2 lg:items-center">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#19d5f2]">

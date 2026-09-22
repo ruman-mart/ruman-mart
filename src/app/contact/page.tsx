@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -53,6 +53,22 @@ const subjects = [
 
 export default function ContactPage() {
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [site, setSite] = useState({ storeAddress: STORE_ADDRESS, storePhone: "+92 304 1298136", storeEmail: "rumanshakee56@gmail.com", whatsappUrl: "https://wa.me/923041298136?text=Hello%20Ruman%20Mart" });
+  useEffect(() => {
+    void fetch("/api/settings/shipping")
+      .then(async (response) => {
+        if (response.ok) {
+          const settings = await response.json();
+          setSite((current) => ({ ...current, ...settings }));
+        }
+      })
+      .catch(() => undefined);
+  }, []);
+  const dynamicContactInfo = [
+    { Icon: Phone, title: "Phone", lines: [site.storePhone, "Mon - Sat, 9:00 AM - 6:00 PM"] },
+    { Icon: Mail, title: "Email", lines: [site.storeEmail, "We reply within 24 hours"] },
+    { Icon: MapPin, title: "Our Address", lines: [site.storeAddress] },
+  ];
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f5f7fb] font-sans text-slate-800">
@@ -131,7 +147,7 @@ export default function ContactPage() {
             aria-hidden="true"
           />
 
-          <div className="relative mx-auto flex min-h-[400px] max-w-[1400px] items-center px-5 py-7 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
+          <div className="relative mx-auto flex min-h-[400px] max-w-[1800px] items-center px-5 py-7 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
             <div className="max-w-xl text-white">
               {/* Breadcrumb - mobile par hidden */}
               <div
@@ -190,7 +206,7 @@ export default function ContactPage() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1400px] px-4 py-10 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-4 py-10 md:px-8">
           {/* Form + contact info */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
             {/* Send Us a Message */}
@@ -303,7 +319,7 @@ export default function ContactPage() {
 
             {/* Contact info sidebar */}
             <div className="flex flex-col gap-4">
-              {contactInfo.map(({ Icon, title, lines }, index) => (
+              {dynamicContactInfo.map(({ Icon, title, lines }, index) => (
                 <div
                   key={title}
                   className="contact-card anim-fade-up flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
@@ -325,7 +341,7 @@ export default function ContactPage() {
 
               <div
                 className="contact-card anim-fade-up flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
-                style={{ animationDelay: `${contactInfo.length * 80}ms` }}
+                style={{ animationDelay: `${dynamicContactInfo.length * 80}ms` }}
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                   <MessageCircle size={18} aria-hidden="true" />
@@ -338,7 +354,7 @@ export default function ContactPage() {
                     </p>
                   </div>
                   <Link
-                    href="https://wa.me/923041298136?text=Hello%20Ruman%20Mart"
+                    href={site.whatsappUrl || "#"}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition-all duration-300 hover:bg-emerald-600 hover:shadow-md hover:shadow-emerald-500/30"
@@ -367,7 +383,7 @@ export default function ContactPage() {
               <div className="relative h-64 overflow-hidden rounded-xl border border-slate-200 sm:h-80">
                 <iframe
                   title="Ruman Mart location"
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(STORE_ADDRESS)}&output=embed`}
+                  src={`https://www.google.com/maps?q=${encodeURIComponent(site.storeAddress)}&output=embed`}
                   className="h-full w-full border-0"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -383,14 +399,14 @@ export default function ContactPage() {
                   Visit Our Store
                 </p>
                 <p className="text-sm leading-6 text-slate-500">
-                  {STORE_ADDRESS}
+                  {site.storeAddress}
                 </p>
                 <p className="text-xs text-slate-400">
                   You can also visit our physical store for a better shopping
                   experience. Our team is always happy to help!
                 </p>
                 <Link
-                  href={`https://www.google.com/maps?q=${encodeURIComponent(STORE_ADDRESS)}`}
+                  href={`https://www.google.com/maps?q=${encodeURIComponent(site.storeAddress)}`}
                   target="_blank"
                   className="group mt-1 inline-flex items-center gap-2 rounded-lg border-2 border-[#19c9ee] px-5 py-2.5 text-sm font-semibold text-[#0b75a5] transition-all duration-300 hover:bg-[#e6f7fc] hover:shadow-md"
                 >

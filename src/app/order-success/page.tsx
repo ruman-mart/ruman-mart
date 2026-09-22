@@ -1,5 +1,8 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   CheckCircle2,
@@ -12,16 +15,22 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AddToCartButton from "../components/AddToCartButton";
 
 type OrderItem = {
+  id?: string;
   name: string;
-  brand: string;
-  qty: number;
+  brand?: string;
+  qty?: number;
+  quantity?: number;
   price: number;
   image: string;
+  specs?: string[];
 };
 
 type RelatedProduct = {
+  slug: string;
+  categorySlug: string;
   name: string;
   price: number;
   originalPrice: number;
@@ -37,22 +46,23 @@ const orderItems: OrderItem[] = [
   { name: "Smart Watch", brand: "Samsung", qty: 1, price: 12999, image: "/products/smartwatch.png" },
 ];
 
-const relatedProducts: RelatedProduct[] = [
-  { name: "Wireless Earbuds", price: 7999, originalPrice: 12999, rating: 4.7, reviews: 2200, discount: 38, image: "/products/earbuds.png" },
-  { name: "Smart Watch", price: 12999, originalPrice: 18999, rating: 4.6, reviews: 742, discount: 32, image: "/products/smartwatch.png" },
-  { name: "TWS Earphones", price: 6999, originalPrice: 9999, rating: 4.4, reviews: 5300, discount: 30, image: "/products/tws-earphones.png" },
-  { name: "Gaming Laptop", price: 159999, originalPrice: 199999, rating: 4.7, reviews: 966, discount: 20, image: "/products/gaming-laptop.png" },
-  { name: "Bluetooth Speaker", price: 14599, originalPrice: 19999, rating: 4.6, reviews: 1900, discount: 27, image: "/products/bluetooth-speaker.png" },
-];
-
-const orderDetails = {
-  orderNumber: "#RM20250915",
-  orderDate: "15 Sep 2026, 03:42 PM",
-  paymentMethod: "Cash on Delivery",
+type OrderSnapshot = {
+  orderNumber: string;
+  orderDate: string;
+  paymentMethod: string;
+  items: OrderItem[];
+  subtotal: number;
+  shippingCost: number;
+  discount: number;
+  total: number;
 };
 
 function formatPrice(price: number) {
   return `Rs. ${price.toLocaleString("en-PK")}`;
+}
+
+function productSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 function StarRating({ rating, size = 11 }: { rating: number; size?: number }) {
@@ -74,10 +84,99 @@ function StarRating({ rating, size = 11 }: { rating: number; size?: number }) {
 }
 
 export default function OrderSuccessPage() {
-  const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const shipping = 250;
-  const discount = 0;
-  const total = subtotal + shipping - discount;
+  const searchParams = useSearchParams();
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+  const [orderDetails, setOrderDetails] = useState<OrderSnapshot>({
+    orderNumber: searchParams.get("order") ?? "RM-000000",
+    orderDate: new Date().toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }),
+    paymentMethod: "Cash on Delivery",
+    items: orderItems,
+    subtotal: orderItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+    shippingCost: 0,
+    discount: 0,
+    total: orderItems.reduce((sum, item) => sum + item.price * item.qty, 0),
+  });
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("ruman-last-order");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as Partial<OrderSnapshot>;
+        if (parsed.orderNumber || parsed.items?.length) {
+          setOrderDetails({
+            orderNumber: parsed.orderNumber ? `#${parsed.orderNumber}` : "#RM-000000",
+            orderDate: parsed.orderDate ? new Date(parsed.orderDate).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }) : new Date().toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }),
+            paymentMethod: parsed.paymentMethod ?? "Cash on Delivery",
+            items: (parsed.items ?? []).map((item) => ({
+              ...item,
+              qty: item.qty ?? item.quantity ?? 1,
+              brand: item.brand ?? item.specs?.join(" ") ?? "Product",
+            })),
+            subtotal: Number(parsed.subtotal ?? 0),
+            shippingCost: Number(parsed.shippingCost ?? 0),
+            discount: Number(parsed.discount ?? 0),
+            total: Number(parsed.total ?? (parsed.subtotal ?? 0)),
+          });
+        }
+      } catch {
+        // ignore malformed saved order data
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const orderNames = new Set(orderDetails.items.map((item) => item.name));
+    void fetch("/api/products")
+      .then(async (response) => {
+        if (!response.ok) return [];
+        return await response.json() as Array<{
+          slug: string;
+          name: string;
+          price: number;
+          originalPrice: number;
+          image: string;
+          images?: string | string[];
+          category?: { slug: string };
+          rating?: number | string;
+          reviews?: number;
+        }>;
+      })
+      .then((products) => {
+        const limited = products
+          .filter((product) => !orderNames.has(product.name))
+          .slice(0, 5)
+          .map((product) => {
+            const images = Array.isArray(product.images)
+              ? product.images
+              : (() => {
+                  try { return JSON.parse(product.images ?? "[]") as string[]; } catch { return []; }
+                })();
+            const discount = product.originalPrice > product.price
+              ? Math.round((1 - product.price / product.originalPrice) * 100)
+              : 0;
+            return {
+              slug: product.slug,
+              categorySlug: product.category?.slug ?? "categories",
+              name: product.name,
+              price: Number(product.price),
+              originalPrice: Number(product.originalPrice),
+              rating: Number(product.rating ?? 0),
+              reviews: Number(product.reviews ?? 0),
+              discount,
+              image: images[0] || product.image,
+            } satisfies RelatedProduct;
+          });
+        setRelatedProducts(limited);
+      })
+      .catch(() => setRelatedProducts([]));
+  }, [orderDetails.items]);
+
+  const subtotal = useMemo(() => orderDetails.items.reduce((sum, item) => sum + Number(item.price) * Number(item.qty ?? item.quantity ?? 1), 0), [orderDetails.items]);
+  const shipping = orderDetails.shippingCost;
+  const discount = orderDetails.discount;
+  const total = orderDetails.total || subtotal + shipping - discount;
+
+  const displayItems = orderDetails.items.length ? orderDetails.items : orderItems;
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7fb] font-sans text-slate-800">
@@ -86,7 +185,7 @@ export default function OrderSuccessPage() {
       <main className="flex-1 bg-[#f5f7fb]">
         {/* Hero */}
         <section className="relative isolate flex min-h-[160px] w-full items-center overflow-hidden bg-gradient-to-r from-[#031a3b] to-[#0b1d45] px-5 py-8 md:min-h-[180px] md:px-8">
-          <div className="relative z-10 mx-auto flex w-full max-w-[1400px] items-center justify-between gap-6">
+          <div className="relative z-10 mx-auto flex w-full max-w-[1800px] items-center justify-between gap-6">
             <div className="flex items-center gap-3 text-white">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-[#19d5f2]">
                 <CheckCircle2 size={24} className="text-[#19d5f2]" aria-hidden="true" />
@@ -118,7 +217,7 @@ export default function OrderSuccessPage() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-4 py-8 md:px-8">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
             {/* Left column */}
             <div className="flex flex-col gap-5">
@@ -201,24 +300,26 @@ export default function OrderSuccessPage() {
                 <div className="scrollbar-hide flex snap-x gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-5">
                   {relatedProducts.map((item) => (
                     <div
-                      key={item.name}
+                      key={item.slug || item.name}
                       className="group flex min-w-[170px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"
                     >
-                      <div className="relative flex h-28 items-center justify-center bg-white px-3 pt-3">
-                        <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white">
-                          -{item.discount}%
-                        </span>
+                      <Link href={`/categories/${item.categorySlug}/${item.slug}`} className="relative flex h-28 items-center justify-center bg-white px-3 pt-3">
+                        {item.discount > 0 && (
+                          <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white">
+                            -{item.discount}%
+                          </span>
+                        )}
                         <img
                           src={item.image}
                           alt={item.name}
                           className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                         />
-                      </div>
+                      </Link>
 
                       <div className="flex flex-1 flex-col gap-1 px-3 pb-3 pt-2">
-                        <h3 className="truncate text-xs font-bold text-[#0b1d45]">
+                        <Link href={`/categories/${item.categorySlug}/${item.slug}`} className="truncate text-xs font-bold text-[#0b1d45]">
                           {item.name}
-                        </h3>
+                        </Link>
                         <div className="flex items-center gap-1">
                           <StarRating rating={item.rating} />
                           <span className="text-[11px] text-slate-400">
@@ -233,13 +334,7 @@ export default function OrderSuccessPage() {
                             {formatPrice(item.originalPrice)}
                           </span>
                         </div>
-                        <button
-                          type="button"
-                          className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#0b1d45] py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#0b75a5]"
-                        >
-                          <ShoppingCart size={12} aria-hidden="true" />
-                          Add to Cart
-                        </button>
+                        <AddToCartButton productSlug={item.slug} name={item.name} price={item.price} image={item.image} />
                       </div>
                     </div>
                   ))}
@@ -260,8 +355,8 @@ export default function OrderSuccessPage() {
               </div>
 
               <div className="flex flex-col gap-3">
-                {orderItems.map((item) => (
-                  <div key={item.name} className="flex items-center gap-3">
+                {displayItems.map((item, index) => (
+                  <div key={`${item.name}-${index}`} className="flex items-center gap-3">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#f5f7fb] p-1.5">
                       <img src={item.image} alt={item.name} className="h-full w-full object-contain" />
                     </div>
@@ -270,11 +365,11 @@ export default function OrderSuccessPage() {
                         {item.name}
                       </p>
                       <p className="truncate text-xs text-slate-500">
-                        {item.brand} · Qty: {item.qty}
+                        {item.brand ?? item.specs?.join(" · ") ?? "Product"} · Qty: {item.qty ?? item.quantity ?? 1}
                       </p>
                     </div>
                     <span className="shrink-0 text-sm font-bold text-[#0b1d45]">
-                      {formatPrice(item.price * item.qty)}
+                      {formatPrice(Number(item.price) * Number(item.qty ?? item.quantity ?? 1))}
                     </span>
                   </div>
                 ))}
@@ -282,7 +377,7 @@ export default function OrderSuccessPage() {
 
               <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-4 text-sm">
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Subtotal ({orderItems.length} items)</span>
+                  <span>Subtotal ({displayItems.reduce((sum, item) => sum + Number(item.qty ?? item.quantity ?? 1), 0)} items)</span>
                   <span className="font-semibold text-[#0b1d45]">
                     {formatPrice(subtotal)}
                   </span>

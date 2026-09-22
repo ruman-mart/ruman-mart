@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Search,
   Heart,
@@ -31,11 +31,51 @@ const categories = [
   "Sports & Outdoor",
 ];
 
-export default function Navbar({ cartCount = 3 }) {
+const CART_STORAGE_KEY = "ruman-cart";
+const WISHLIST_STORAGE_KEY = "ruman-wishlist";
+
+function readCartCount() {
+  try {
+    const items = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? "[]");
+    return Array.isArray(items)
+      ? items.reduce((total, item) => total + Number(item?.quantity ?? 0), 0)
+      : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [cartCount, setCartCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [logoUrl, setLogoUrl] = useState("/logo-web.png");
+
+  useEffect(() => {
+    void fetch("/api/settings/shipping").then(async (response) => {
+      if (response.ok) setLogoUrl((await response.json()).logoUrl || "/logo-web.png");
+    }).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    const updateCartCount = () => setCartCount(readCartCount());
+    const updateWishlistCount = () => setWishlistCount(readWishlistCount());
+    updateCartCount();
+    updateWishlistCount();
+    window.addEventListener("storage", updateCartCount);
+    window.addEventListener("ruman-cart-updated", updateCartCount);
+    window.addEventListener("storage", updateWishlistCount);
+    window.addEventListener("wishlist-updated", updateWishlistCount);
+    return () => {
+      window.removeEventListener("storage", updateCartCount);
+      window.removeEventListener("ruman-cart-updated", updateCartCount);
+      window.removeEventListener("storage", updateWishlistCount);
+      window.removeEventListener("wishlist-updated", updateWishlistCount);
+    };
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -48,14 +88,14 @@ export default function Navbar({ cartCount = 3 }) {
     <header className="sticky top-0 z-50 w-full border-b-2 border-[#1fb6e6] bg-[radial-gradient(circle_at_top,#173d7a_0%,#001B42_55%,#00132f_100%)] text-white shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
       {/* Single grid controls logo / search+nav / actions so the nav row
           lines up exactly under the search bar's left edge. */}
-      <div className="mx-auto grid max-w-[1400px] grid-cols-[auto_1fr_auto] items-center gap-x-4 px-4 py-3 md:gap-x-8 md:px-8">
+      <div className="mx-auto grid max-w-[1800px] grid-cols-[auto_1fr_auto] items-center gap-x-4 px-4 py-3 md:gap-x-8 md:px-8">
      {/* Logo */}
 <Link
   href="/"
   className="row-span-2 flex shrink-0 items-center self-center md:mr-2"
 >
   <Image
-    src="/logo-web.png"
+    src={logoUrl}
     alt="Ruman Mart logo"
     width={120}
     height={68}
@@ -88,11 +128,11 @@ export default function Navbar({ cartCount = 3 }) {
 
         {/* Actions */}
         <div className="flex items-center gap-5 justify-self-end md:gap-7">
-          <Link
-            href="/wishlist"
-            className="hidden items-center gap-2 text-sm transition-colors hover:text-[#1fb6e6] lg:flex"
-          >
-            <Heart size={20} strokeWidth={1.75} />
+          <Link href="/wishlist" className="hidden items-center gap-2 text-sm transition-colors hover:text-[#1fb6e6] lg:flex">
+            <span className="relative">
+              <Heart size={20} strokeWidth={1.75} />
+              {wishlistCount > 0 && <span className="absolute -right-3 -top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#1fb6e6] text-[11px] font-semibold text-white">{wishlistCount}</span>}
+            </span>
             Wishlist
           </Link>
 
@@ -206,4 +246,13 @@ export default function Navbar({ cartCount = 3 }) {
       )}
     </header>
   );
+}
+
+function readWishlistCount() {
+  try {
+    const items = JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY) ?? "[]");
+    return Array.isArray(items) ? items.length : 0;
+  } catch {
+    return 0;
+  }
 }

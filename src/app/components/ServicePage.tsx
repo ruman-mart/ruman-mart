@@ -24,7 +24,7 @@ export default function ServicePage({ title, eyebrow, intro, sections }: Service
           <div className="absolute inset-0 bg-[url('/mobile-hero.png')] bg-cover bg-center sm:hidden" aria-hidden="true" />
           <div className="absolute inset-0 hidden bg-[url('/hero.png')] bg-cover bg-center sm:block" aria-hidden="true" />
           <div className="absolute inset-0 hidden bg-gradient-to-r from-[#031a3b]/90 via-[#031a3b]/45 to-transparent sm:block sm:from-[#031a3b]/75 sm:via-[#031a3b]/35 sm:to-transparent" />
-          <div className="relative mx-auto flex min-h-[340px] max-w-[1400px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[400px] md:px-8">
+          <div className="relative mx-auto flex min-h-[340px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[400px] md:px-8">
             <div className="max-w-2xl text-white">
               <div className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-slate-200 backdrop-blur-sm">
                 <Link href="/" className="flex items-center gap-1 hover:text-white"><HomeIcon size={12} aria-hidden="true" /> Home</Link>

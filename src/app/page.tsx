@@ -9,9 +9,14 @@ import {
   Truck,  Award, Lock,
   type LucideIcon,
 } from "lucide-react";
+import Link from "next/link";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import WishlistButton from "./components/WishlistButton";
+import AddToCartButton from "./components/AddToCartButton";
+import CategoryModel from "@/lib/models/Category";
+import ProductModel from "@/lib/models/Product";
+import MarqueeStrip from "./components/MarqueeStrip";
 
 const categories = [
   { name: "Electronics", image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&q=80" },
@@ -28,6 +33,7 @@ const checklistItems = [
   { Icon: Truck, label: "Fast Delivery" },
 ];
 type Product = {
+  productSlug: string;
   name: string;
   category: string;
   image: string;
@@ -36,10 +42,13 @@ type Product = {
   price: number;
   originalPrice: number;
   discount: number;
+  inStock?: boolean;
+  stockQuantity?: number;
 };
 
 const featuredProducts: Product[] = [
   {
+    productSlug: "wireless-earbuds",
     name: "Wireless Earbuds",
     category: "Electronics",
     image: "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=800&q=80",
@@ -50,6 +59,7 @@ const featuredProducts: Product[] = [
     discount: 38,
   },
   {
+    productSlug: "smart-watch",
     name: "Smart Watch",
     category: "Style Gadgets",
     image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80",
@@ -60,6 +70,7 @@ const featuredProducts: Product[] = [
     discount: 32,
   },
   {
+    productSlug: "air-fryer",
     name: "Air Fryer",
     category: "Kitchen Accessories",
     image: "https://images.unsplash.com/photo-1585515320310-259814833e62?w=800&q=80",
@@ -70,6 +81,7 @@ const featuredProducts: Product[] = [
     discount: 32,
   },
   {
+    productSlug: "comfort-bed-set",
     name: "Comfort Bed Set",
     category: "Homeware",
     image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=800&q=80",
@@ -80,6 +92,7 @@ const featuredProducts: Product[] = [
     discount: 33,
   },
   {
+    productSlug: "mens-perfume",
     name: "Men's Perfume",
     category: "Perfumes",
     image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?w=800&q=80",
@@ -90,6 +103,7 @@ const featuredProducts: Product[] = [
     discount: 40,
   },
   {
+    productSlug: "luxury-watch",
     name: "Luxury Watch",
     category: "Watches",
     image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800&q=80",
@@ -190,7 +204,34 @@ function StarRating({ rating }: { rating: number }) {
     </div>
   );
 }
-export default function Home() {
+export default async function Home() {
+  let landingCategories = categories;
+  let landingFeaturedProducts = featuredProducts;
+  try {
+    const featuredRows = (await CategoryModel.findAll({ where: { isActive: true, isFeatured: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ name: string; image: string }>;
+    if (featuredRows.length) landingCategories = featuredRows;
+  } catch (error) {
+    console.error("Featured categories could not load:", error);
+  }
+  try {
+    const featuredRows = (await ProductModel.findAll({ where: { isActive: true, isFeatured: true }, include: [{ association: "category", attributes: ["name"] }], order: [["createdAt", "DESC"]], raw: true, nest: true })) as unknown as Array<{ slug: string; name: string; brand: string; price: number; originalPrice: number; rating: number | string; reviews: number; image: string; inStock: boolean; stockQuantity: number; category?: { name: string } }>;
+    if (featuredRows.length) {
+      landingFeaturedProducts = featuredRows.map((product) => ({ productSlug: product.slug, name: product.name, category: product.category?.name ?? "", image: product.image, rating: Number(product.rating), reviews: product.reviews, price: product.price, originalPrice: product.originalPrice, discount: Math.max(0, Math.round((1 - product.price / product.originalPrice) * 100)), inStock: product.inStock, stockQuantity: product.stockQuantity }));
+    }
+  } catch (error) {
+    console.error("Featured products could not load:", error);
+  }
+
+  const promoBannerData: PromoBanner[] = landingCategories.slice(0, 6).map((category, index) => {
+    const fallback = promoBanners[index % promoBanners.length];
+    return {
+      title: category.name,
+      tagline: fallback.tagline,
+      discount: fallback.discount,
+      image: category.image || fallback.image,
+    };
+  });
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f5f7fb] font-sans text-slate-800 dark:bg-black">
       <Navbar />
@@ -213,7 +254,7 @@ export default function Home() {
     aria-hidden="true"
   />
 
-  <div className="relative mx-auto flex min-h-[380px] max-w-[1400px] items-center px-5 py-8 sm:min-h-[360px] md:min-h-[470px] md:px-8 lg:min-h-[520px]">
+  <div className="relative mx-auto flex min-h-[380px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[360px] md:min-h-[470px] md:px-8 lg:min-h-[520px]">
     <div className="max-w-xl text-white">
 
       <p className="mb-3 hidden text-xs font-semibold uppercase tracking-[0.22em] text-slate-200 sm:block sm:text-sm">
@@ -240,17 +281,18 @@ export default function Home() {
         Fast delivery
       </p>
 
-      <a
+      <Link
         href="/categories"
         className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#19c9ee] px-5 py-2.5 text-xs font-semibold text-white shadow-lg shadow-cyan-950/30 transition-colors hover:bg-[#0db4d8] sm:px-7 sm:py-3 sm:text-sm"
       >
         Shop Now
         <ArrowRight size={16} aria-hidden="true" />
-      </a>
+      </Link>
 
     </div>
   </div>
 </section>
+<MarqueeStrip />
       {/* Categories */}
 <section className="border-b border-slate-200 bg-white py-7 sm:py-9">
   <style>{`
@@ -317,13 +359,13 @@ export default function Home() {
     }
   `}</style>
 
-  <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+  <div className="mx-auto max-w-[1800px] px-4 md:px-8">
     {/* Header row with View All button */}
     <div className="mb-4 flex items-center justify-between">
       <h2 className="text-lg font-bold text-[#0b1d45] sm:text-xl">
         Shop by Category
       </h2>
-      <a
+      <Link
         href="/categories"
         className="group inline-flex items-center gap-1 text-xs font-semibold text-[#0b75a5] transition-colors hover:text-[#064d70] sm:text-sm"
       >
@@ -333,11 +375,11 @@ export default function Home() {
           className="transition-transform duration-300 group-hover:translate-x-0.5"
           aria-hidden="true"
         />
-      </a>
+      </Link>
     </div>
 
     <div className="scrollbar-hide flex snap-x gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 sm:overflow-visible lg:grid-cols-6">
-      {categories.map(({ name, image }, index) => (
+      {landingCategories.map(({ name, image }, index) => (
         <a
           key={name}
           href={`/categories/${name.toLowerCase().replaceAll(" ", "-")}`}
@@ -386,7 +428,7 @@ export default function Home() {
 
         {/* Featured Products */}
         <section className="bg-[#f7fafc] py-8 sm:py-10">
-          <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+          <div className="mx-auto max-w-[1800px] px-4 md:px-8">
             <div className="mb-5 flex items-end justify-between">
               <div>
                 <h2 className="text-lg font-bold text-[#0b1d45] sm:text-xl">
@@ -405,16 +447,16 @@ export default function Home() {
             </div>
 
             <div className="scrollbar-hide flex snap-x gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-6">
-              {featuredProducts.map((product) => (
+              {landingFeaturedProducts.map((product) => (
                 <div
                   key={product.name}
                   className="group flex min-w-[200px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"
                 >
                   <div className="relative flex h-36 items-center justify-center bg-white px-4 pt-4">
                     <WishlistButton product={product} />
-                    <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
-                      -{product.discount}%
-                    </span>
+                    {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
+                        -{product.discount}%
+                      </span>}
                     <img
                       src={product.image}
                       alt={product.name}
@@ -428,32 +470,16 @@ export default function Home() {
                     </h3>
                     <p className="text-xs text-slate-500">{product.category}</p>
 
-                    <div className="flex items-center gap-1.5">
-                      <StarRating rating={product.rating} />
-                      <span className="text-xs font-semibold text-[#0b1d45]">
-                        {product.rating}
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        ({product.reviews.toLocaleString()})
-                      </span>
-                    </div>
-
                     <div className="mt-1 flex items-baseline gap-2">
                       <span className="text-base font-bold text-[#0b1d45]">
                         Rs. {product.price.toLocaleString()}
                       </span>
-                      <span className="text-xs text-slate-400 line-through">
-                        Rs. {product.originalPrice.toLocaleString()}
-                      </span>
+                      {product.originalPrice > product.price && product.discount > 0 && <span className="text-xs text-slate-400 line-through">
+                          Rs. {product.originalPrice.toLocaleString()}
+                        </span>}
                     </div>
 
-                    <button
-                      type="button"
-                      className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                    >
-                      <ShoppingCart size={14} aria-hidden="true" />
-                      Add to Cart
-                    </button>
+                    <AddToCartButton productSlug={product.productSlug} name={product.name} price={product.price} image={product.image} stockQuantity={product.stockQuantity} inStock={product.inStock} />
                   </div>
                 </div>
               ))}
@@ -461,9 +487,9 @@ export default function Home() {
           </div>
         </section>
           <section className="bg-white py-8 sm:py-10">
-      <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+      <div className="mx-auto max-w-[1800px] px-4 md:px-8">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {promoBanners.map((banner) => (
+          {promoBannerData.map((banner) => (
             <a
               key={banner.title}
               href={`/categories/${banner.title.toLowerCase().replaceAll(" ", "-")}`}
@@ -500,7 +526,7 @@ export default function Home() {
       </div>
     </section>
      <section className="bg-[#f5f7fb] py-6 sm:py-8">
-      <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+      <div className="mx-auto max-w-[1800px] px-4 md:px-8">
         <div className="grid grid-cols-2 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white shadow-sm sm:grid-cols-4 sm:divide-x sm:divide-y-0">
           {trustBadges.map(({ Icon, title, subtitle }) => (
             <div
@@ -525,7 +551,7 @@ export default function Home() {
       </div>
     </section>
      <section className="relative isolate overflow-hidden bg-gradient-to-r from-[#031633] via-[#0b1d45] to-[#0e2a5e] py-8 sm:py-10">
-      <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+      <div className="mx-auto max-w-[1800px] px-4 md:px-8">
         <div className="flex flex-col items-center gap-6 lg:flex-row lg:gap-8">
           {/* Left: text + CTA */}
           <div className="w-full shrink-0 text-center lg:w-[26%] lg:text-left">

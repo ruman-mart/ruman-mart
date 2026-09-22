@@ -3,16 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "db:migrate": "node scripts/migrate.cjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "cloudinary": "^2.11.0",
+    "dotenv": "^16.5.0",
     "lucide-react": "^1.47.0",
+    "mysql2": "^3.14.1",
     "next": "16.3.5",
+    "pg-hstore": "^2.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sequelize": "^6.37.8",
+    "umzug": "^3.8.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

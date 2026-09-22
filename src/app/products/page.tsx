@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AddToCartButton from "../components/AddToCartButton";
 
 type Product = {
   id: string;
@@ -123,7 +124,7 @@ export default function ProductsPage() {
     aria-hidden="true"
   />
 
-  <div className="relative mx-auto flex min-h-[400px] max-w-[1400px] items-center px-5 py-8 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
+  <div className="relative mx-auto flex min-h-[400px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
     
     {/* Breadcrumb - mobile par hidden */}
     <div className="absolute inset-x-5 top-0 hidden items-center gap-1.5 py-4 text-sm text-slate-300 sm:flex md:inset-x-8">
@@ -159,7 +160,7 @@ export default function ProductsPage() {
   </div>
 </section>
 
-      <div className="mx-auto max-w-[1400px] px-4 py-6 sm:py-8 md:px-8">
+      <div className="mx-auto max-w-[1800px] px-4 py-6 sm:py-8 md:px-8">
   {/* Mobile filter toggle */}
   <button
     type="button"
@@ -354,9 +355,9 @@ export default function ProductsPage() {
         >
           {/* Product image */}
           <div className="relative flex h-44 items-center justify-center bg-white px-4 pt-4 sm:h-40">
-            <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
-              -{product.discount}%
-            </span>
+            {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
+                -{product.discount}%
+              </span>}
 
             <img
               src={product.image}
@@ -375,39 +376,21 @@ export default function ProductsPage() {
               {product.name}
             </h3>
 
-            <div className="flex items-center gap-1.5">
-              <StarRating rating={product.rating} />
-
-              <span className="text-xs font-semibold text-[#0b1d45]">
-                {product.rating}
-              </span>
-
-              <span className="text-xs text-slate-400">
-                ({product.reviews.toLocaleString()})
-              </span>
-            </div>
-
             <div className="mt-1 flex flex-wrap items-baseline gap-2">
               <span className="text-base font-bold text-[#0b1d45]">
                 {formatPrice(product.price)}
               </span>
 
-              <span className="text-xs text-slate-400 line-through">
-                {formatPrice(product.originalPrice)}
-              </span>
+              {product.originalPrice > product.price && product.discount > 0 && <span className="text-xs text-slate-400 line-through">
+                  {formatPrice(product.originalPrice)}
+                </span>}
             </div>
           </div>
         </Link>
 
         {/* Add to Cart */}
         <div className="px-4 pb-4">
-          <button
-            type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b1d45] py-2 text-xs font-semibold text-white transition-colors hover:bg-[#0b75a5]"
-          >
-            <ShoppingCart size={14} aria-hidden="true" />
-            Add to Cart
-          </button>
+          <AddToCartButton productSlug={product.id} name={product.name} price={product.price} image={product.image} />
         </div>
       </article>
     ))}
@@ -425,9 +408,9 @@ export default function ProductsPage() {
           href={`/products/${product.id}`}
           className="relative flex h-44 w-full shrink-0 items-center justify-center rounded-lg bg-[#f5f7fb] sm:h-28 sm:w-28"
         >
-          <span className="absolute left-1.5 top-1.5 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white">
-            -{product.discount}%
-          </span>
+          {product.originalPrice > product.price && product.discount > 0 && <span className="absolute left-1.5 top-1.5 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white">
+              -{product.discount}%
+            </span>}
 
           <img
             src={product.image}
@@ -448,38 +431,20 @@ export default function ProductsPage() {
             </h3>
           </Link>
 
-          <div className="flex items-center gap-1.5">
-            <StarRating rating={product.rating} />
-
-            <span className="text-xs font-semibold text-[#0b1d45]">
-              {product.rating}
-            </span>
-
-            <span className="text-xs text-slate-400">
-              ({product.reviews.toLocaleString()})
-            </span>
-          </div>
-
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="text-base font-bold text-[#0b1d45] sm:text-lg">
               {formatPrice(product.price)}
             </span>
 
-            <span className="text-xs text-slate-400 line-through">
-              {formatPrice(product.originalPrice)}
-            </span>
+            {product.originalPrice > product.price && product.discount > 0 && <span className="text-xs text-slate-400 line-through">
+                {formatPrice(product.originalPrice)}
+              </span>}
           </div>
         </div>
 
         {/* Add to Cart */}
         <div className="flex w-full shrink-0 items-center sm:w-auto">
-          <button
-            type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0b1d45] px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#0b75a5] sm:w-auto sm:text-sm"
-          >
-            <ShoppingCart size={14} aria-hidden="true" />
-            Add to Cart
-          </button>
+          <AddToCartButton productSlug={product.id} name={product.name} price={product.price} image={product.image} />
         </div>
       </article>
     ))}

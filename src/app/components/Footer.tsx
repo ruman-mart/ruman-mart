@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Phone, Mail, MapPin } from "lucide-react";
 
 const quickLinks = [
@@ -16,7 +17,6 @@ const quickLinks = [
 const customerService = [
   { label: "Help Center", href: "/help-center" },
   { label: "Shipping Policy", href: "/shipping-policy" },
-  { label: "Return Policy", href: "/return-policy" },
   { label: "Terms & Conditions", href: "/terms" },
   { label: "Privacy Policy", href: "/privacy-policy" },
 ];
@@ -79,15 +79,18 @@ function TikTokIcon({ size = 16, strokeWidth = 1.75 }) {
 }
 
 export default function Footer() {
+  const [site, setSite] = useState({ logoUrl: "/logo-web.png", storeAddress: "hala, sindh, Pakistan", storePhone: "+92 304 1298136", storeEmail: "rumanshakee56@gmail.com", facebookUrl: "https://www.facebook.com/share/1DfNAzWgrU/", instagramUrl: "https://www.instagram.com/ruman_mart", tiktokUrl: "https://www.tiktok.com/@ruman.ali0304", whatsappUrl: "" });
+  useEffect(() => { void fetch("/api/settings/shipping").then(async (response) => { if (response.ok) { const settings = await response.json(); setSite((current) => ({ ...current, ...settings })); } }).catch(() => undefined); }, []);
+  const dynamicSocials = socials.map((social) => ({ ...social, href: social.label === "Facebook" ? site.facebookUrl : social.label === "Instagram" ? site.instagramUrl : site.tiktokUrl })).filter((social) => social.href);
   return (
     <footer className="w-full border-t-2 border-[#1fb6e6] bg-[radial-gradient(circle_at_top,#173d7a_0%,#001B42_55%,#00132f_100%)] text-white shadow-[0_-2px_12px_rgba(0,0,0,0.12)]">
-      <div className="mx-auto max-w-[1400px] px-4 py-10 md:px-8">
+      <div className="mx-auto max-w-[1800px] px-4 py-10 md:px-8">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.8fr_1fr_1fr_0.9fr]">
           {/* Logo + tagline */}
           <div className="flex flex-col gap-2">
             <Link href="/" className="mt-6 flex items-center gap-2">
               <Image
-                src="/logo-web.png"
+                src={site.logoUrl}
                 alt="Ruman Mart logo"
                 width={220}
                 height={120}
@@ -146,24 +149,24 @@ export default function Footer() {
               <li className="flex items-center gap-2">
                 <Phone size={16} className="shrink-0 text-[#1fb6e6]" />
                 <a
-                  href="tel:+923041298136"
+                  href={`tel:${site.storePhone}`}
                   className="transition-colors hover:text-[#1fb6e6]"
                 >
-                  +92 304 1298136
+                  {site.storePhone}
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={16} className="shrink-0 text-[#1fb6e6]" />
                 <a
-                  href="mailto:rumanshakee56@gmail.com"
+                  href={`mailto:${site.storeEmail}`}
                   className="transition-colors hover:text-[#1fb6e6]"
                 >
-                  rumanshakee56@gmail.com
+                  {site.storeEmail}
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin size={16} className="shrink-0 text-[#1fb6e6]" />
-                <span>hala, sindh, Pakistan</span>
+                <span>{site.storeAddress}</span>
               </li>
             </ul>
           </div>
@@ -174,7 +177,7 @@ export default function Footer() {
               Follow Us
             </h3>
             <div className="flex items-center gap-3">
-              {socials.map(({ label, href, Icon }) => (
+              {dynamicSocials.map(({ label, href, Icon }) => (
                 <a
                   key={label}
                   href={href}

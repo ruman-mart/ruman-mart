@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import CategoryModel from "@/lib/models/Category";
 
 type Category = {
   name: string;
@@ -46,7 +47,15 @@ const benefits = [
   { Icon: Sparkles, title: "Great value", text: "Deals worth finding" },
 ];
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const databaseCategories = (await CategoryModel.findAll({ where: { isActive: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ name: string; image: string; slug: string }>;
+  const visibleCategories: Category[] = databaseCategories.map((category) => ({
+    name: category.name,
+    image: category.image,
+    productCount: 0,
+    slug: category.slug,
+  }));
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f7fafc] text-slate-800">
       <style>{`
@@ -180,7 +189,7 @@ export default function CategoriesPage() {
             aria-hidden="true"
           />
 
-          <div className="relative mx-auto flex min-h-[400px] max-w-[1400px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[380px] md:px-8">
+          <div className="relative mx-auto flex min-h-[400px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[380px] md:px-8">
             {/* Breadcrumb - mobile par hidden */}
             <div
               className="anim-fade-up absolute inset-x-5 top-0 hidden items-center gap-1.5 py-4 text-sm text-slate-300 sm:flex md:inset-x-8"
@@ -223,7 +232,7 @@ export default function CategoriesPage() {
         </section>
 
   <section className="py-10 sm:py-14">
-  <div className="mx-auto max-w-[1400px] px-4 md:px-8">
+  <div className="mx-auto max-w-[1800px] px-4 md:px-8">
     <div className="mb-6 flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
       <div
         className="anim-fade-up"
@@ -254,7 +263,7 @@ export default function CategoriesPage() {
     </div>
 
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-      {allCategories.map((category, index) => (
+      {(visibleCategories.length ? visibleCategories : allCategories).map((category, index) => (
         <Link
           key={category.name}
           href={`/categories/${category.slug}`}

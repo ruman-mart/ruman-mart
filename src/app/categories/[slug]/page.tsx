@@ -16,6 +16,8 @@ import { notFound } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import WishlistButton from "../../components/WishlistButton";
+import CategoryModel from "@/lib/models/Category";
+import ProductModel from "@/lib/models/Product";
 
 type Product = {
   name: string;
@@ -65,7 +67,19 @@ const categoryData: Record<string, Category> = {
   },
 };
 
-function getCategory(slug: string): Category | undefined {
+async function getCategory(slug: string): Promise<Category | undefined> {
+  const databaseCategory = (await CategoryModel.findOne({ where: { slug, isActive: true }, raw: true })) as unknown as { id: number; name: string; description: string | null } | null;
+  if (databaseCategory) {
+    const databaseProducts = (await ProductModel.findAll({ attributes: ["name", "brand", "price", "originalPrice", "rating", "reviews", "image"], where: { categoryId: databaseCategory.id, isActive: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ name: string; brand: string; price: number; originalPrice: number; rating: number | string; reviews: number; image: string }>;
+    if (databaseProducts.length || !categoryData[slug]) {
+      return {
+        name: databaseCategory.name,
+        description: databaseCategory.description ?? "Explore products from this collection.",
+        totalProducts: databaseProducts.length,
+        products: databaseProducts.map((product) => ({ name: product.name, brand: product.brand, price: product.price, originalPrice: product.originalPrice, rating: Number(product.rating), reviews: product.reviews, image: product.image })),
+      };
+    }
+  }
   return categoryData[slug];
 }
 
@@ -111,7 +125,7 @@ export default async function CategoryProductsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const category = getCategory(slug);
+  const category = await getCategory(slug);
 
   if (!category) notFound();
 
@@ -140,7 +154,7 @@ export default async function CategoryProductsPage({
     aria-hidden="true"
   />
 
-  <div className="relative mx-auto flex min-h-[400px] max-w-[1400px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[380px] md:px-8">
+  <div className="relative mx-auto flex min-h-[400px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[380px] md:px-8">
     
     {/* Breadcrumb - mobile par hidden */}
     <div className="absolute inset-x-5 top-0 hidden items-center gap-1.5 py-4 text-sm text-slate-300 sm:flex md:inset-x-8">
@@ -192,7 +206,7 @@ export default async function CategoryProductsPage({
   </div>
 </section>
 
-        <div className="mx-auto max-w-[1400px] px-4 py-6 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-4 py-6 md:px-8">
           {/* Header bar */}
           <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div>
@@ -251,6 +265,7 @@ export default async function CategoryProductsPage({
     const discount = Math.round(
       (1 - product.price / product.originalPrice) * 100
     );
+    const hasDiscount = product.originalPrice > product.price && discount > 0;
 
     return (
       <article
@@ -260,9 +275,9 @@ export default async function CategoryProductsPage({
         <div className="relative flex h-40 items-center justify-center bg-white px-4 pt-4">
           <WishlistButton product={product} />
 
-          <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
-            -{discount}%
-          </span>
+          {hasDiscount && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
+              -{discount}%
+            </span>}
 
           <img
             src={product.image}
@@ -280,26 +295,14 @@ export default async function CategoryProductsPage({
             {product.brand}
           </p>
 
-          <div className="flex items-center gap-1.5">
-            <StarRating rating={product.rating} />
-
-            <span className="text-xs font-semibold text-[#0b1d45]">
-              {product.rating}
-            </span>
-
-            <span className="text-xs text-slate-400">
-              ({product.reviews.toLocaleString()})
-            </span>
-          </div>
-
           <div className="mt-1 flex items-baseline gap-2">
             <span className="text-base font-bold text-[#0b1d45]">
               {formatPrice(product.price)}
             </span>
 
-            <span className="text-xs text-slate-400 line-through">
-              {formatPrice(product.originalPrice)}
-            </span>
+            {hasDiscount && <span className="text-xs text-slate-400 line-through">
+                {formatPrice(product.originalPrice)}
+              </span>}
           </div>
 
           <Link

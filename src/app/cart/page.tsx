@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   Lock,
   ArrowLeft,
-  Star,
   Truck,
   ShieldCheck,
   RotateCcw,
@@ -22,6 +21,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AddToCartButton from "../components/AddToCartButton";
 
 type CartItem = {
   id: string;
@@ -30,10 +30,15 @@ type CartItem = {
   price: number;
   quantity: number;
   inStock: boolean;
+  stockQuantity: number;
   image: string;
 };
 
+const CART_STORAGE_KEY = "ruman-cart";
+
 type RelatedProduct = {
+  slug: string;
+  categorySlug: string;
   name: string;
   price: number;
   originalPrice: number;
@@ -42,26 +47,6 @@ type RelatedProduct = {
   discount: number;
   image: string;
 };
-
-const initialCartItems: CartItem[] = [
-  {
-    id: "laptop-hp-fhd",
-    name: "Laptop 15.6\" Full HD",
-    specs: ["Intel Core i5 (8GB RAM) | 512GB SSD)", "Windows 11"],
-    price: 89999,
-    quantity: 1,
-    inStock: true,
-    image: "/products/laptop-hp.png",
-  },
-];
-
-const relatedProducts: RelatedProduct[] = [
-  { name: "Wireless Earbuds", price: 7999, originalPrice: 12999, rating: 4.7, reviews: 2200, discount: 38, image: "/products/earbuds.png" },
-  { name: "Smart Watch", price: 12999, originalPrice: 18999, rating: 4.6, reviews: 742, discount: 32, image: "/products/smartwatch.png" },
-  { name: "TWS Earphones", price: 6999, originalPrice: 9999, rating: 4.4, reviews: 5300, discount: 30, image: "/products/tws-earphones.png" },
-  { name: "Gaming Laptop", price: 159999, originalPrice: 199999, rating: 4.7, reviews: 966, discount: 20, image: "/products/gaming-laptop.png" },
-  { name: "Bluetooth Speaker", price: 14599, originalPrice: 19999, rating: 4.6, reviews: 1900, discount: 27, image: "/products/bluetooth-speaker.png" },
-];
 
 const trustBadges: { Icon: LucideIcon; title: string; subtitle: string }[] = [
   { Icon: Truck, title: "Nationwide Delivery", subtitle: "Rs. 200 - Rs. 250 shipping" },
@@ -74,32 +59,90 @@ function formatPrice(price: number) {
   return `Rs. ${price.toLocaleString("en-PK")}`;
 }
 
-function StarRating({ rating, size = 11 }: { rating: number; size?: number }) {
-  return (
-    <div className="flex">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          size={size}
-          className={
-            i < Math.round(rating)
-              ? "fill-[#f5a623] text-[#f5a623]"
-              : "fill-slate-200 text-slate-200"
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>(initialCartItems);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartLoaded, setCartLoaded] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? "[]") as Partial<CartItem>[];
+      setCartItems(stored.map((item) => ({
+        ...item,
+        specs: item.specs ?? [],
+        quantity: item.quantity ?? 1,
+        inStock: item.inStock ?? true,
+        stockQuantity: item.stockQuantity ?? 999999,
+      })) as CartItem[]);
+    } catch {
+      setCartItems([]);
+    } finally {
+      setCartLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!cartLoaded) return;
+    if (cartItems.length > 0) {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    } else {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    }
+    window.dispatchEvent(new Event("ruman-cart-updated"));
+  }, [cartItems, cartLoaded]);
+
+  useEffect(() => {
+    if (!cartLoaded) return;
+    void fetch("/api/products")
+      .then(async (response) => {
+        if (!response.ok) return [];
+        return await response.json() as Array<{
+          slug: string;
+          name: string;
+          price: number;
+          originalPrice: number;
+          image: string;
+          images?: string | string[];
+          category?: { slug: string };
+        }>;
+      })
+      .then((products) => {
+        const cartNames = new Set(cartItems.map((item) => item.name));
+        setRelatedProducts(
+          products
+            .filter((item) => !cartNames.has(item.name))
+            .slice(0, 5)
+            .map((item) => {
+              const images = Array.isArray(item.images)
+                ? item.images
+                : (() => {
+                    try { return JSON.parse(item.images ?? "[]") as string[]; } catch { return []; }
+                  })();
+              const discount = item.originalPrice > item.price
+                ? Math.round((1 - item.price / item.originalPrice) * 100)
+                : 0;
+              return {
+                slug: item.slug,
+                categorySlug: item.category?.slug ?? "categories",
+                name: item.name,
+                price: Number(item.price),
+                originalPrice: Number(item.originalPrice),
+                rating: 0,
+                reviews: 0,
+                discount,
+                image: images[0] || item.image,
+              };
+            }),
+        );
+      })
+      .catch(() => setRelatedProducts([]));
+  }, [cartItems, cartLoaded]);
 
   const updateQuantity = (id: string, delta: number) => {
     setCartItems((items) =>
       items.map((item) =>
         item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          ? { ...item, quantity: Math.min(item.stockQuantity, Math.max(1, item.quantity + delta)) }
           : item
       )
     );
@@ -133,7 +176,7 @@ export default function CartPage() {
           {/* Overlay */}
           <div className="absolute inset-0 bg-[#031a3b]/50" aria-hidden="true" />
 
-          <div className="relative mx-auto flex min-h-[400px] max-w-[1400px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
+          <div className="relative mx-auto flex min-h-[400px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[300px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
             <div className="w-full max-w-xl text-white">
               {/* Breadcrumb - mobile par hidden */}
               <div className="mb-8 hidden items-center gap-1 text-xs text-slate-300 sm:flex">
@@ -165,7 +208,7 @@ export default function CartPage() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-8">
+        <div className="mx-auto max-w-[1800px] px-4 py-8 md:px-8">
           {cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-slate-200 bg-white py-16 text-center shadow-sm">
               <ShoppingCart size={48} strokeWidth={1.5} className="text-slate-300" aria-hidden="true" />
@@ -330,13 +373,13 @@ export default function CartPage() {
           )}
 
           {/* You May Also Like */}
-          <div className="mt-10">
+          {cartItems.length > 0 && relatedProducts.length > 0 && <div className="mt-10">
             <div className="mb-5 flex items-end justify-between">
               <h2 className="text-lg font-bold text-[#0b1d45] sm:text-xl">
                 You May Also Like
               </h2>
               <Link
-                href="/"
+                href="/products"
                 className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#0b75a5] hover:text-[#064d70] sm:text-sm"
               >
                 View All <ChevronRight size={16} aria-hidden="true" />
@@ -349,50 +392,35 @@ export default function CartPage() {
                   key={item.name}
                   className="group flex min-w-[180px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"
                 >
-                  <div className="relative flex h-32 items-center justify-center bg-white px-3 pt-3">
-                    <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white">
-                      -{item.discount}%
-                    </span>
+                  <Link href={`/categories/${item.categorySlug}/${item.slug}`} className="relative flex h-32 items-center justify-center bg-white px-3 pt-3">
+                    {item.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white">
+                        -{item.discount}%
+                      </span>}
                     <img
                       src={item.image}
                       alt={item.name}
                       className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                     />
-                  </div>
+                  </Link>
 
                   <div className="flex flex-1 flex-col gap-1 px-3 pb-3 pt-2">
-                    <h3 className="truncate text-xs font-bold text-[#0b1d45]">
+                    <Link href={`/categories/${item.categorySlug}/${item.slug}`} className="truncate text-xs font-bold text-[#0b1d45]">
                       {item.name}
-                    </h3>
-                    <div className="flex items-center gap-1">
-                      <StarRating rating={item.rating} />
-                      <span className="text-[11px] font-semibold text-[#0b1d45]">
-                        {item.rating}
-                      </span>
-                      <span className="text-[11px] text-slate-400">
-                        ({item.reviews.toLocaleString()})
-                      </span>
-                    </div>
+                    </Link>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-sm font-bold text-[#0b1d45]">
                         {formatPrice(item.price)}
                       </span>
-                      <span className="text-[11px] text-slate-400 line-through">
-                        {formatPrice(item.originalPrice)}
-                      </span>
+                      {item.discount > 0 && <span className="text-[11px] text-slate-400 line-through">
+                          {formatPrice(item.originalPrice)}
+                        </span>}
                     </div>
-                    <button
-                      type="button"
-                      className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#0b1d45] py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#0b75a5]"
-                    >
-                      <ShoppingCart size={12} aria-hidden="true" />
-                      Add to Cart
-                    </button>
+                    <AddToCartButton productSlug={item.slug} name={item.name} price={item.price} image={item.image} />
                   </div>
                 </div>
               ))}
             </div>
-          </div>
+          </div>}
 
           {/* Trust badges */}
           <div className="mt-10 grid grid-cols-2 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white shadow-sm sm:grid-cols-4 sm:divide-x sm:divide-y-0">

@@ -3,6 +3,7 @@ import { ChevronRight, Home as HomeIcon, ShoppingCart, Star } from "lucide-react
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WishlistButton from "../components/WishlistButton";
+import ProductModel from "@/lib/models/Product";
 
 type Deal = {
   name: string;
@@ -13,16 +14,8 @@ type Deal = {
   rating: number;
   reviews: number;
   image: string;
+  categorySlug?: string;
 };
-
-const deals: Deal[] = [
-  { name: "Laptop 15.6\" Full HD", brand: "HP", price: 89999, originalPrice: 142999, discount: 37, rating: 4.6, reviews: 1200, image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&q=80" },
-  { name: "Wireless Earbuds", brand: "Apple", price: 7999, originalPrice: 12999, discount: 38, rating: 4.7, reviews: 2200, image: "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=800&q=80" },
-  { name: "Smart Watch", brand: "Samsung", price: 12999, originalPrice: 18999, discount: 32, rating: 4.5, reviews: 742, image: "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=800&q=80" },
-  { name: "Gaming Laptop", brand: "Asus", price: 159999, originalPrice: 199999, discount: 20, rating: 4.7, reviews: 966, image: "https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=800&q=80" },
-  { name: "Bluetooth Speaker", brand: "JBL", price: 14599, originalPrice: 19999, discount: 27, rating: 4.6, reviews: 1900, image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=800&q=80" },
-  { name: "Smartphone 256GB", brand: "Apple", price: 149999, originalPrice: 199999, discount: 25, rating: 4.8, reviews: 3900, image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&q=80" },
-];
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -42,7 +35,15 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-export default function DealsPage() {
+export default async function DealsPage() {
+  let landingDeals: Deal[] = [];
+  try {
+    const databaseDeals = (await ProductModel.findAll({ where: { isActive: true, isDeal: true }, include: [{ association: "category", attributes: ["slug"] }], order: [["createdAt", "DESC"]], raw: true, nest: true })) as unknown as Array<{ name: string; brand: string; price: number; originalPrice: number; rating: number | string; reviews: number; image: string; category?: { slug: string } }>;
+    landingDeals = databaseDeals.map((deal) => ({ name: deal.name, brand: deal.brand, price: deal.price, originalPrice: deal.originalPrice, discount: Math.max(0, Math.round((1 - deal.price / deal.originalPrice) * 100)), rating: Number(deal.rating), reviews: deal.reviews, image: deal.image, categorySlug: deal.category?.slug }));
+  } catch (error) {
+    console.error("Deals could not load:", error);
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7fb] text-slate-800">
       <style>{`
@@ -166,7 +167,7 @@ export default function DealsPage() {
             aria-hidden="true"
           />
 
-          <div className="relative mx-auto flex min-h-[400px] max-w-[1400px] items-center px-5 py-7 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
+          <div className="relative mx-auto flex min-h-[400px] max-w-[1800px] items-center px-5 py-7 sm:min-h-[280px] md:min-h-[340px] md:px-8 lg:min-h-[380px]">
             <div className="max-w-2xl text-white">
               {/* Breadcrumb - mobile par hidden */}
               <div
@@ -206,7 +207,7 @@ export default function DealsPage() {
           </div>
         </section>
 
-      <section className="mx-auto max-w-[1400px] px-4 py-10 sm:py-14 md:px-8">
+      <section className="mx-auto max-w-[1800px] px-4 py-10 sm:py-14 md:px-8">
   <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
     <div className="anim-fade-up" style={{ animationDelay: "0ms" }}>
       <h2 className="text-2xl font-bold text-[#0b1d45] sm:text-3xl">
@@ -233,8 +234,10 @@ export default function DealsPage() {
     </Link>
   </div>
 
+  {landingDeals.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><h3 className="text-lg font-bold text-[#0b1d45]">No deals available right now</h3><p className="mt-2 text-sm text-slate-500">New offers will appear here when products are marked as deals.</p></div>}
+
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-    {deals.map((deal, index) => (
+    {landingDeals.map((deal, index) => (
       <article
         key={deal.name}
         className="deal-card anim-fade-up group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(11,29,69,0.06)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-8px_rgba(244,63,94,0.22)]"
@@ -292,7 +295,7 @@ export default function DealsPage() {
           </div>
 
           <Link
-            href={`/categories/electronics/${slugify(deal.name)}`}
+            href={`/categories/${deal.categorySlug ?? "electronics"}/${slugify(deal.name)}`}
             className="mt-2 inline-flex items-center justify-center gap-1 rounded-lg bg-[#0b1d45] py-2 text-xs font-semibold text-white transition-all duration-300 group-hover:bg-gradient-to-r group-hover:from-rose-500 group-hover:to-[#0b75a5] group-hover:shadow-md group-hover:shadow-rose-500/30"
           >
             <ShoppingCart size={13} aria-hidden="true" />
