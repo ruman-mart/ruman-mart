@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Heart,
@@ -45,11 +45,28 @@ function readCartCount() {
   }
 }
 
+function slugify(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildProductUrl(product) {
+  const categorySlug = product?.category?.slug || "electronics";
+  const productSlug = slugify(product?.name || "");
+  return `/categories/${categorySlug}/${productSlug}`;
+}
+
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [products, setProducts] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [logoUrl, setLogoUrl] = useState("/logo-web.png");
@@ -58,6 +75,16 @@ export default function Navbar() {
     void fetch("/api/settings/shipping").then(async (response) => {
       if (response.ok) setLogoUrl((await response.json()).logoUrl || "/logo-web.png");
     }).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/products")
+      .then(async (response) => {
+        if (!response.ok) return;
+        const data = await response.json();
+        setProducts(Array.isArray(data) ? data : []);
+      })
+      .catch(() => setProducts([]));
   }, []);
 
   useEffect(() => {
@@ -77,11 +104,72 @@ export default function Navbar() {
     };
   }, []);
 
+  const suggestions = useMemo(() => {
+    const searchText = query.trim().toLowerCase();
+    if (!searchText) return [];
+
+    return products
+      .filter((product) => {
+        const haystack = [product.name, product.brand, product.category?.name]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(searchText);
+      })
+      .slice(0, 6);
+  }, [products, query]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (!query.trim()) return;
-    // router.push(`/search?q=${encodeURIComponent(query)}`)
-    console.log("search:", query);
+
+    const target = suggestions[0] || null;
+    setShowSuggestions(false);
+    if (target) {
+      router.push(buildProductUrl(target));
+      return;
+    }
+
+    router.push("/categories");
+  };
+
+  const renderSuggestionList = (isMobile = false) => {
+    if (!showSuggestions || !query.trim() || suggestions.length === 0) return null;
+
+    return (
+      <ul
+        className={`absolute left-0 right-0 z-50 overflow-hidden rounded-xl border border-slate-200 bg-white text-left shadow-xl ${
+          isMobile ? "top-[calc(100%+0.5rem)]" : "top-[calc(100%+0.5rem)]"
+        }`}
+      >
+        {suggestions.map((product) => (
+          <li key={`${product.id ?? product.slug ?? product.name}-${product.brand ?? "brand"}`}>
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                setQuery(product.name);
+                setShowSuggestions(false);
+                router.push(buildProductUrl(product));
+              }}
+              className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-slate-100"
+            >
+              <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
+                {product.image ? (
+                  <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                ) : (
+                  <Search size={16} className="text-slate-500" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-slate-800">{product.name}</p>
+                <p className="truncate text-xs text-slate-500">{product.brand} • {product.category?.name || "Category"}</p>
+              </div>
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
   };
 
   return (
@@ -105,13 +193,18 @@ export default function Navbar() {
 </Link>
 
         {/* Search — centered within its grid column */}
-        <div className="mx-auto hidden w-full max-w-xl md:block">
+        <div className="relative mx-auto hidden w-full max-w-xl md:block">
           <form onSubmit={handleSearch}>
             <div className="flex w-full overflow-hidden rounded-full bg-white">
               <input
                 type="text"
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
                 placeholder="Search for products, brands and more..."
                 className="w-full bg-transparent px-5 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400"
               />
@@ -124,6 +217,7 @@ export default function Navbar() {
               </button>
             </div>
           </form>
+          {renderSuggestionList(false)}
         </div>
 
         {/* Actions */}
@@ -205,20 +299,28 @@ export default function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="border-t border-white/10 px-4 pb-4 md:hidden">
-          <form onSubmit={handleSearch} className="py-3">
-            <div className="flex overflow-hidden rounded-full bg-white">
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for products..."
-                className="w-full bg-transparent px-4 py-2 text-sm text-slate-700 outline-none"
-              />
-              <button type="submit" className="bg-[#1fb6e6] px-4">
-                <Search size={18} />
-              </button>
-            </div>
-          </form>
+          <div className="relative py-3">
+            <form onSubmit={handleSearch}>
+              <div className="flex overflow-hidden rounded-full bg-white">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  placeholder="Search for products..."
+                  className="w-full bg-transparent px-4 py-2 text-sm text-slate-700 outline-none"
+                />
+                <button type="submit" className="bg-[#1fb6e6] px-4">
+                  <Search size={18} />
+                </button>
+              </div>
+            </form>
+            {renderSuggestionList(true)}
+          </div>
 
           <ul className="flex flex-col gap-1 text-sm">
             {navLinks.map((link) => (

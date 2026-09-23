@@ -167,6 +167,7 @@ export default function ProductDetailsPage() {
   const router = useRouter();
   const params = useParams<{ slug: string; product: string }>();
   const [product, setProduct] = useState<ProductData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedStorage, setSelectedStorage] = useState("");
@@ -256,10 +257,12 @@ export default function ProductDetailsPage() {
 
   useEffect(() => {
     let mounted = true;
+    setIsLoading(true);
     void fetch(`/api/products/${params.product}`).then(async (response) => {
       if (!mounted) return;
       if (!response.ok) {
         setProduct(null);
+        setIsLoading(false);
         return;
       }
       const data = await response.json() as {
@@ -302,11 +305,31 @@ export default function ProductDetailsPage() {
       };
 
       setProduct(normalizedProduct);
+      setIsLoading(false);
     }).catch(() => {
-      if (mounted) setProduct(null);
+      if (mounted) {
+        setProduct(null);
+        setIsLoading(false);
+      }
     });
     return () => { mounted = false; };
   }, [params.product, params.slug]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#f5f7fb] text-slate-800">
+        <Navbar />
+        <main className="flex flex-1 items-center justify-center px-4">
+          <div className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-8 py-12 text-center shadow-sm">
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#0b75a5]" />
+            <h1 className="mt-5 text-xl font-bold text-[#0b1d45]">Loading product...</h1>
+            <p className="mt-2 text-sm text-slate-500">Fetching product details.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (

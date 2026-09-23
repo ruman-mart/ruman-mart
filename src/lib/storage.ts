@@ -1,3 +1,4 @@
+import { Readable } from "node:stream";
 import { unlink } from "node:fs/promises";
 import path from "node:path";
 import { v2 as cloudinary } from "cloudinary";
@@ -13,6 +14,25 @@ if (hasCloudinaryConfig) {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
+export async function uploadImage(buffer: Buffer, filename: string) {
+  if (!hasCloudinaryConfig) return null;
+
+  return new Promise<string>((resolve, reject) => {
+    const upload = cloudinary.uploader.upload_stream(
+      { folder: "ruman-mart", public_id: filename.replace(/\.[^/.]+$/, "") },
+      (error, result) => {
+        if (error || !result?.secure_url) {
+          reject(error ?? new Error("Cloudinary did not return an image URL."));
+          return;
+        }
+        resolve(result.secure_url);
+      },
+    );
+
+    Readable.from(buffer).pipe(upload);
   });
 }
 
