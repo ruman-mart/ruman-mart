@@ -25,9 +25,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Ruman Mart" }],
   creator: "Ruman Mart",
   icons: {
-    icon: [{ url: "/logo-web.png", type: "image/png" }],
-    shortcut: ["/logo-web.png"],
-    apple: [{ url: "/logo-web.png", type: "image/png" }],
+    icon: [{ url: "/logo-web.png?v=2", type: "image/png" }],
+    shortcut: ["/logo-web.png?v=2"],
+    apple: [{ url: "/logo-web.png?v=2", type: "image/png" }],
   },
   alternates: { canonical: "/" },
   openGraph: {
