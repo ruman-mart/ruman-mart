@@ -18,6 +18,12 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
+export const metadata = {
+  title: "About Ruman Mart",
+  description: "Learn about Ruman Mart, your trusted online store for quality products and reliable delivery across Pakistan.",
+  alternates: { canonical: "/about" },
+};
+
 const whyChooseUs: { Icon: LucideIcon; title: string; text: string }[] = [
   {
     Icon: ShieldCheck,

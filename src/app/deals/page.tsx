@@ -5,6 +5,12 @@ import Footer from "../components/Footer";
 import WishlistButton from "../components/WishlistButton";
 import ProductModel from "@/lib/models/Product";
 
+export const metadata = {
+  title: "Deals and Discounts",
+  description: "Save more with the latest deals and discounts on quality products at Ruman Mart.",
+  alternates: { canonical: "/deals" },
+};
+
 type Deal = {
   name: string;
   brand: string;

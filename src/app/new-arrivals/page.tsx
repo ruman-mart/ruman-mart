@@ -5,6 +5,12 @@ import Footer from "../components/Footer";
 import WishlistButton from "../components/WishlistButton";
 import ProductModel from "@/lib/models/Product";
 
+export const metadata = {
+  title: "New Arrivals",
+  description: "Discover the newest products and latest arrivals added to Ruman Mart.",
+  alternates: { canonical: "/new-arrivals" },
+};
+
 type Product = {
   name: string;
   brand: string;

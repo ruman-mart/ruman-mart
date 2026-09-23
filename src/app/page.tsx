@@ -18,6 +18,16 @@ import CategoryModel from "@/lib/models/Category";
 import ProductModel from "@/lib/models/Product";
 import MarqueeStrip from "./components/MarqueeStrip";
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "OnlineStore",
+  name: "Ruman Mart",
+  url: "https://www.rumanmart.com",
+  description: "Quality electronics, homeware, kitchen accessories, perfumes and watches at great prices.",
+  areaServed: "PK",
+  sameAs: [],
+};
+
 const categories = [
   { name: "Electronics", image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=800&q=80" },
   { name: "Homeware", image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=800&q=80" },
@@ -235,6 +245,7 @@ export default async function Home() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f5f7fb] font-sans text-slate-800 dark:bg-black">
       <Navbar />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
 
       <main className="flex-1">
       <section className="relative isolate overflow-hidden bg-[#031a3b]">

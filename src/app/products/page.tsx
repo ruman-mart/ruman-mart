@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -86,11 +86,54 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState("popularity");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>(allProducts);
+  const [filters, setFilters] = useState(categoryFilters);
+
+  useEffect(() => {
+    let mounted = true;
+    void fetch("/api/products")
+      .then(async (response) => {
+        if (!response.ok) return [];
+        return await response.json() as Array<{
+          id: number;
+          slug: string;
+          name: string;
+          brand: string;
+          price: number | string;
+          originalPrice: number | string;
+          rating?: number | string;
+          reviews?: number;
+          image?: string;
+          category?: { name?: string };
+          inStock?: boolean;
+        }>;
+      })
+      .then((databaseProducts) => {
+        if (!mounted || !databaseProducts.length) return;
+        const normalizedProducts = databaseProducts.map((product) => ({
+          id: product.slug || String(product.id),
+          name: product.name,
+          brand: product.brand,
+          category: product.category?.name ?? "Other",
+          price: Number(product.price),
+          originalPrice: Number(product.originalPrice),
+          rating: Number(product.rating ?? 0),
+          reviews: Number(product.reviews ?? 0),
+          discount: product.originalPrice ? Math.max(0, Math.round((1 - Number(product.price) / Number(product.originalPrice)) * 100)) : 0,
+          image: product.image || "/placeholder-product.svg",
+        }));
+        setProducts(normalizedProducts);
+        setFilters(["All", ...Array.from(new Set(normalizedProducts.map((product) => product.category)))]);
+      })
+      .catch(() => undefined);
+
+    return () => { mounted = false; };
+  }, []);
 
   const filteredProducts =
     activeCategory === "All"
-      ? allProducts
-      : allProducts.filter((p) => p.category === activeCategory);
+      ? products
+      : products.filter((p) => p.category === activeCategory);
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortBy === "price-low") return a.price - b.price;
@@ -179,7 +222,7 @@ export default function ProductsPage() {
       </h2>
 
       <div className="flex flex-col gap-1">
-        {categoryFilters.map((cat) => (
+        {filters.map((cat) => (
           <button
             key={cat}
             type="button"
@@ -224,7 +267,7 @@ export default function ProductsPage() {
           </div>
 
           <div className="flex flex-col gap-1 overflow-y-auto">
-            {categoryFilters.map((cat) => (
+            {filters.map((cat) => (
               <button
                 key={cat}
                 type="button"

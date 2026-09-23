@@ -11,6 +11,12 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CategoryModel from "@/lib/models/Category";
 
+export const metadata = {
+  title: "Shop by Category",
+  description: "Explore Ruman Mart categories including electronics, homeware, perfumes, watches and kitchen accessories.",
+  alternates: { canonical: "/categories" },
+};
+
 type Category = {
   name: string;
   image: string;
