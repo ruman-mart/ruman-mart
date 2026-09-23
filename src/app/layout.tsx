@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   keywords: ["online shopping Pakistan", "electronics Pakistan", "homeware", "kitchen accessories", "perfumes", "watches"],
   authors: [{ name: "Ruman Mart" }],
   creator: "Ruman Mart",
+  icons: {
+    icon: [{ url: "/logo-web.png", type: "image/png" }],
+    shortcut: ["/logo-web.png"],
+    apple: [{ url: "/logo-web.png", type: "image/png" }],
+  },
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
