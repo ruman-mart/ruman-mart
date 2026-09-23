@@ -457,8 +457,8 @@ export default async function Home() {
               </a>
             </div>
 
-            <div className="scrollbar-hide flex snap-x gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 xl:grid-cols-6">
-              {landingFeaturedProducts.map((product) => (
+            <div className="scrollbar-hide flex snap-x gap-4 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-6">
+              {landingFeaturedProducts.slice(0, 6).map((product) => (
                 <div
                   key={product.name}
                   className="group flex min-w-[200px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"

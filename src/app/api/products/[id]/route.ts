@@ -21,14 +21,37 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const product = await Product.findByPk((await params).id);
   if (!product) return NextResponse.json({ message: "Product not found." }, { status: 404 });
   const body = await request.json() as {
+    name?: string;
+    slug?: string;
+    brand?: string;
+    categoryId?: number;
+    price?: number;
+    originalPrice?: number;
+    image?: string;
     images?: string[] | string;
     colors?: string[] | string;
     storageOptions?: string[] | string;
     quickSpecs?: Array<string | { label: string; sub?: string }> | string;
     keyFeatures?: string[] | string;
+    inStock?: boolean;
+    stockQuantity?: number;
+    isFeatured?: boolean;
+    isNewArrival?: boolean;
+    isDeal?: boolean;
   };
   await product.update({
-    ...body,
+    ...(body.name !== undefined ? { name: body.name } : {}),
+    ...(body.slug !== undefined ? { slug: body.slug } : {}),
+    ...(body.brand !== undefined ? { brand: body.brand } : {}),
+    ...(body.categoryId !== undefined ? { categoryId: body.categoryId } : {}),
+    ...(body.price !== undefined ? { price: body.price } : {}),
+    ...(body.originalPrice !== undefined ? { originalPrice: body.originalPrice } : {}),
+    ...(body.image !== undefined ? { image: body.image } : {}),
+    ...(body.inStock !== undefined ? { inStock: Boolean(body.inStock) } : {}),
+    ...(body.stockQuantity !== undefined ? { stockQuantity: body.stockQuantity } : {}),
+    ...(body.isFeatured !== undefined ? { isFeatured: Boolean(body.isFeatured) } : {}),
+    ...(body.isNewArrival !== undefined ? { isNewArrival: Boolean(body.isNewArrival) } : {}),
+    ...(body.isDeal !== undefined ? { isDeal: Boolean(body.isDeal) } : {}),
     ...(Array.isArray(body.images) ? { images: JSON.stringify(body.images) } : {}),
     ...(typeof body.images === "string" ? { images: body.images } : {}),
     ...(Array.isArray(body.colors) ? { colors: JSON.stringify(body.colors) } : {}),
