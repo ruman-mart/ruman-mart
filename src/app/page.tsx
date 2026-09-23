@@ -216,7 +216,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 export default async function Home() {
   let landingCategories = categories;
-  let landingFeaturedProducts = featuredProducts;
+  let landingFeaturedProducts: Product[] = [];
   try {
     const featuredRows = (await CategoryModel.findAll({ where: { isActive: true, isFeatured: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ name: string; image: string }>;
     if (featuredRows.length) landingCategories = featuredRows;
@@ -225,9 +225,7 @@ export default async function Home() {
   }
   try {
     const featuredRows = (await ProductModel.findAll({ where: { isActive: true, isFeatured: true }, include: [{ association: "category", attributes: ["name"] }], order: [["createdAt", "DESC"]], raw: true, nest: true })) as unknown as Array<{ slug: string; name: string; brand: string; price: number; originalPrice: number; rating: number | string; reviews: number; image: string; inStock: boolean; stockQuantity: number; category?: { name: string } }>;
-    if (featuredRows.length) {
-      landingFeaturedProducts = featuredRows.map((product) => ({ productSlug: product.slug, name: product.name, category: product.category?.name ?? "", image: product.image, rating: Number(product.rating), reviews: product.reviews, price: product.price, originalPrice: product.originalPrice, discount: Math.max(0, Math.round((1 - product.price / product.originalPrice) * 100)), inStock: product.inStock, stockQuantity: product.stockQuantity }));
-    }
+    landingFeaturedProducts = featuredRows.map((product) => ({ productSlug: product.slug, name: product.name, category: product.category?.name ?? "", image: product.image, rating: Number(product.rating), reviews: product.reviews, price: product.price, originalPrice: product.originalPrice, discount: Math.max(0, Math.round((1 - product.price / product.originalPrice) * 100)), inStock: product.inStock, stockQuantity: product.stockQuantity }));
   } catch (error) {
     console.error("Featured products could not load:", error);
   }
