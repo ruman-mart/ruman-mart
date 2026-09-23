@@ -139,3 +139,19 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: "Unable to update order status." }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  if (!(await authorizedUserId())) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  try {
+    await runMigrations();
+    const body = await request.json() as { id?: number };
+    if (!body.id) return NextResponse.json({ message: "Order is required." }, { status: 400 });
+    const order = await Order.findByPk(body.id);
+    if (!order) return NextResponse.json({ message: "Order not found." }, { status: 404 });
+    await order.destroy();
+    return NextResponse.json({ message: "Order deleted." });
+  } catch (error) {
+    console.error("Order deletion failed:", error);
+    return NextResponse.json({ message: "Unable to delete order." }, { status: 500 });
+  }
+}

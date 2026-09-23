@@ -34,3 +34,36 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.navigation-progress {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  height: 4px;
+  width: 100%;
+  background: #1FB6E6;
+  box-shadow: 0 0 12px rgba(31, 182, 230, 0.75);
+  transform-origin: left center;
+  animation: navigation-progress-start 1.2s ease-in-out infinite;
+}
+
+.navigation-progress-complete {
+  width: 100%;
+  animation: navigation-progress-finish 280ms ease-out forwards;
+}
+
+@keyframes navigation-progress-start {
+  0% { transform: scaleX(0.08); opacity: 1; }
+  70% { transform: scaleX(0.7); opacity: 1; }
+  100% { transform: scaleX(0.92); opacity: 0.9; }
+}
+
+@keyframes navigation-progress-finish {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navigation-progress { animation: none; }
+}

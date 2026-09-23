@@ -177,7 +177,7 @@ export default function ProductDetailsPage() {
   const hasDiscount = product ? product.originalPrice > product.price && product.discount > 0 : false;
   const hasStock = product ? product.inStock && product.stockQuantity > 0 : false;
 
-  function handleAddToCart() {
+  function handleAddToCart(destination = "/cart") {
     if (!product || !hasStock) return;
     const cartItem: StoredCartItem = {
       id: `${params.product}-${selectedColor}-${selectedStorage}`,
@@ -207,7 +207,7 @@ export default function ProductDetailsPage() {
     }
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
     window.dispatchEvent(new Event("ruman-cart-updated"));
-    router.push("/cart");
+    router.push(destination);
   }
 
   useEffect(() => {
@@ -543,7 +543,7 @@ export default function ProductDetailsPage() {
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     type="button"
-                    onClick={handleAddToCart}
+                    onClick={() => handleAddToCart()}
                     disabled={!hasStock}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#0b1d45] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0b75a5] disabled:cursor-not-allowed disabled:bg-slate-300"
                   >
@@ -552,6 +552,7 @@ export default function ProductDetailsPage() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleAddToCart("/checkout")}
                     disabled={!hasStock}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border-2 border-[#19c9ee] py-3 text-sm font-semibold text-[#0b75a5] transition-colors hover:bg-[#e6f7fc] disabled:cursor-not-allowed disabled:border-slate-300 disabled:text-slate-400"
                   >

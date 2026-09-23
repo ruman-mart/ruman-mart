@@ -17,12 +17,62 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import ShippingSettings from "@/lib/models/ShippingSettings";
 
 export const metadata = {
   title: "About Ruman Mart",
   description: "Learn about Ruman Mart, your trusted online store for quality products and reliable delivery across Pakistan.",
   alternates: { canonical: "/about" },
 };
+
+type WebsiteProfile = {
+  storeAddress: string;
+  storePhone: string;
+  storeEmail: string;
+  facebookUrl: string;
+  instagramUrl: string;
+  tiktokUrl: string;
+  whatsappUrl: string;
+  aboutStoryTitle: string;
+  aboutStoryText: string;
+  aboutStorySecondText: string;
+  aboutStoryImage: string;
+};
+
+const defaultProfile: WebsiteProfile = {
+  storeAddress: "Shakeel Shopping Centre, Tariq Road",
+  storePhone: "+92 304 1298136",
+  storeEmail: "rumanshakee56@gmail.com",
+  facebookUrl: "",
+  instagramUrl: "",
+  tiktokUrl: "",
+  whatsappUrl: "https://wa.me/923041298136?text=Hello%20Ruman%20Mart",
+  aboutStoryTitle: "Built with Passion, For Your Convenience",
+  aboutStoryText: "Ruman Mart began with a simple idea: to put quality products within reach of every home at a fair price. Starting in Hala, we have grown from a single store into a presence across Instagram, TikTok, Facebook, WhatsApp, and our flagship store at Shakeel Shopping Centre, Tariq Road.",
+  aboutStorySecondText: "Today we proudly serve customers across Pakistan with a wide and growing range of products.",
+  aboutStoryImage: "/about.png",
+};
+
+async function getWebsiteProfile(): Promise<WebsiteProfile> {
+  try {
+    const settings = await ShippingSettings.findByPk(1, { raw: true }) as unknown as Partial<WebsiteProfile> | null;
+    return {
+      storeAddress: String(settings?.storeAddress || defaultProfile.storeAddress),
+      storePhone: String(settings?.storePhone || defaultProfile.storePhone),
+      storeEmail: String(settings?.storeEmail || defaultProfile.storeEmail),
+      facebookUrl: String(settings?.facebookUrl || ""),
+      instagramUrl: String(settings?.instagramUrl || ""),
+      tiktokUrl: String(settings?.tiktokUrl || ""),
+      whatsappUrl: String(settings?.whatsappUrl || defaultProfile.whatsappUrl),
+      aboutStoryTitle: String(settings?.aboutStoryTitle || defaultProfile.aboutStoryTitle),
+      aboutStoryText: String(settings?.aboutStoryText || defaultProfile.aboutStoryText),
+      aboutStorySecondText: String(settings?.aboutStorySecondText || defaultProfile.aboutStorySecondText),
+      aboutStoryImage: String(settings?.aboutStoryImage || defaultProfile.aboutStoryImage),
+    };
+  } catch {
+    return defaultProfile;
+  }
+}
 
 const whyChooseUs: { Icon: LucideIcon; title: string; text: string }[] = [
   {
@@ -59,13 +109,14 @@ const commitments = [
   { Icon: Headset, text: "Taking every piece of customer feedback seriously" },
 ];
 
-const socialLinks = [
-  { Icon: MessageCircle, label: "WhatsApp", href: "https://wa.me/923041298136?text=Hello%20Ruman%20Mart" },
-  { Icon: MessageCircle, label: "WhatsApp", href: "https://wa.me/923041298136?text=Hello%20Ruman%20Mart" },
-  { Icon: MessageCircle, label: "WhatsApp", href: "https://wa.me/923041298136?text=Hello%20Ruman%20Mart" },
-];
+export default async function AboutPage() {
+  const profile = await getWebsiteProfile();
+  const socialLinks = [
+    { Icon: MessageCircle, label: "WhatsApp", href: profile.whatsappUrl },
+    { Icon: MessageCircle, label: "Instagram", href: profile.instagramUrl },
+    { Icon: MessageCircle, label: "Facebook", href: profile.facebookUrl },
+  ].filter((link) => link.href);
 
-export default function AboutPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f5f7fb] font-sans text-slate-800">
       <Navbar />
@@ -155,29 +206,21 @@ export default function AboutPage() {
       </p>
 
       <h2 className="mt-2 text-2xl font-bold leading-tight text-[#0b1d45] sm:text-3xl">
-        Built with Passion,
-        <span className="block text-[#19d5f2]">
-          For Your Convenience
-        </span>
+        {profile.aboutStoryTitle}
       </h2>
 
       <p className="mt-4 text-sm leading-6 text-slate-500">
-        Ruman Mart began with a simple idea: to put quality products
-        within reach of every home at a fair price. Starting in Hala,
-        we have grown from a single store into a presence across
-        Instagram, TikTok, Facebook, WhatsApp, and our flagship store
-        at Shakeel Shopping Centre, Tariq Road.
+        {profile.aboutStoryText}
       </p>
 
       <p className="mt-3 text-sm leading-6 text-slate-500">
-        Today we proudly serve customers across Pakistan with a wide
-        and growing range of products.
+        {profile.aboutStorySecondText}
       </p>
     </div>
 
     <div className="relative overflow-hidden rounded-2xl bg-[#0b1d45] shadow-lg">
       <img
-        src="/about.png"
+        src={profile.aboutStoryImage}
         alt="Ruman Mart workspace and products"
         className="h-auto w-full object-contain"
       />
@@ -291,7 +334,7 @@ export default function AboutPage() {
                     </Link>
                   ))}
                   <Link
-                    href="https://wa.me/923041298136?text=Hello%20Ruman%20Mart"
+                    href={profile.whatsappUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-2 rounded-full bg-[#19c9ee] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0db4d8]"
@@ -308,8 +351,10 @@ export default function AboutPage() {
                   <div>
                     <p className="text-sm font-bold text-white">Visit Our Store</p>
                     <p className="mt-1 text-sm text-slate-300">
-                      Shakeel Shopping Centre, Tariq Road
+                      {profile.storeAddress}
                     </p>
+                    <p className="mt-1 text-xs text-slate-400">{profile.storePhone}</p>
+                    <p className="text-xs text-slate-400">{profile.storeEmail}</p>
                   </div>
                 </div>
                 <Link

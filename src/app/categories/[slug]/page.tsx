@@ -19,6 +19,8 @@ import WishlistButton from "../../components/WishlistButton";
 import CategoryModel from "@/lib/models/Category";
 import ProductModel from "@/lib/models/Product";
 
+export const dynamic = "force-dynamic";
+
 type Product = {
   name: string;
   brand: string;
@@ -72,12 +74,7 @@ async function getCategory(slug: string): Promise<Category | undefined> {
   if (databaseCategory) {
     const databaseProducts = (await ProductModel.findAll({ attributes: ["name", "brand", "price", "originalPrice", "rating", "reviews", "image"], where: { categoryId: databaseCategory.id, isActive: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ name: string; brand: string; price: number; originalPrice: number; rating: number | string; reviews: number; image: string }>;
     if (databaseProducts.length || !categoryData[slug]) {
-      return {
-        name: databaseCategory.name,
-        description: databaseCategory.description ?? "Explore products from this collection.",
-        totalProducts: databaseProducts.length,
-        products: databaseProducts.map((product) => ({ name: product.name, brand: product.brand, price: product.price, originalPrice: product.originalPrice, rating: Number(product.rating), reviews: product.reviews, image: product.image })),
-      };
+      return { name: databaseCategory.name, description: databaseCategory.description ?? "Explore products from this collection.", totalProducts: databaseProducts.length, products: databaseProducts.map((product) => ({ name: product.name, brand: product.brand, price: product.price, originalPrice: product.originalPrice, rating: Number(product.rating), reviews: product.reviews, image: product.image })) };
     }
   }
   return categoryData[slug];
@@ -96,40 +93,38 @@ function productSlug(name: string) {
 }
 
 const heroBenefits: { Icon: LucideIcon; title: string; text: string }[] = [
-   { Icon: Truck, title: "Fast Delivery", text: "Quick delivery to your doorstep" },
+  { Icon: Truck, title: "Fast Delivery", text: "Quick delivery to your doorstep" },
   { Icon: ShieldCheck, title: "Secure Payments", text: "100% secure checkout" },
   { Icon: Headset, title: "24/7 Support", text: "We're here to help" },
 ];
 
 function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          size={12}
-          className={
-            i < Math.round(rating)
-              ? "fill-[#f5a623] text-[#f5a623]"
-              : "fill-slate-200 text-slate-200"
-          }
-        />
-      ))}
-    </div>
-  );
+  return <div className="flex">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={12} className={i < Math.round(rating) ? "fill-[#f5a623] text-[#f5a623]" : "fill-slate-200 text-slate-200"} />)}</div>;
 }
 
 export default async function CategoryProductsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { slug } = await params;
+  const { page: pageParam } = await searchParams;
   const category = await getCategory(slug);
 
   if (!category) notFound();
 
-  const shownCount = category.products.length;
+  const pageSize = 12;
+  const totalPages = Math.max(1, Math.ceil(category.products.length / pageSize));
+  const requestedPage = Number.parseInt(pageParam ?? "1", 10);
+  const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
+  const startIndex = (currentPage - 1) * pageSize;
+  const visibleProducts = category.products.slice(startIndex, startIndex + pageSize);
+  const shownCount = visibleProducts.length;
+  const pageNumbers = totalPages <= 7
+    ? Array.from({ length: totalPages }, (_, index) => index + 1)
+    : Array.from(new Set([1, currentPage - 1, currentPage, currentPage + 1, totalPages])).filter((page) => page > 0 && page <= totalPages).sort((a, b) => a - b);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7fb] text-slate-800">
@@ -261,7 +256,7 @@ export default async function CategoryProductsPage({
 
     {/* Product grid */}
 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-  {category.products.map((product) => {
+  {visibleProducts.map((product) => {
     const discount = Math.round(
       (1 - product.price / product.originalPrice) * 100
     );
@@ -318,42 +313,30 @@ export default async function CategoryProductsPage({
   })}
 </div>
           {/* Pagination */}
-          <div className="mt-8 flex items-center justify-center gap-1.5">
-            <button
-              type="button"
-              aria-label="Previous page"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
-            >
+          {totalPages > 1 && <nav aria-label="Category products pagination" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
+            <Link href={`/categories/${slug}?page=${Math.max(1, currentPage - 1)}`} aria-label="Previous page" className={`flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white ${currentPage === 1 ? "pointer-events-none text-slate-300" : "text-slate-500 hover:bg-slate-50"}`}>
               <ChevronRight size={16} className="rotate-180" aria-hidden="true" />
-            </button>
-            {[1, 2, 3, 4].map((page) => (
-              <button
+            </Link>
+            {pageNumbers.map((page, index) => (
+              <span key={page} className="flex items-center gap-1.5">
+                {index > 0 && page - pageNumbers[index - 1] > 1 && <span className="px-1 text-sm text-slate-400">...</span>}
+              <Link
                 key={page}
-                type="button"
+                href={`/categories/${slug}?page=${page}`}
                 className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold ${
-                  page === 1
+                  page === currentPage
                     ? "bg-[#19c9ee] text-white"
                     : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 {page}
-              </button>
+              </Link>
+              </span>
             ))}
-            <span className="px-1 text-sm text-slate-400">...</span>
-            <button
-              type="button"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-600 hover:bg-slate-50"
-            >
-              10
-            </button>
-            <button
-              type="button"
-              aria-label="Next page"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
-            >
+            <Link href={`/categories/${slug}?page=${Math.min(totalPages, currentPage + 1)}`} aria-label="Next page" className={`flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white ${currentPage === totalPages ? "pointer-events-none text-slate-300" : "text-slate-500 hover:bg-slate-50"}`}>
               <ChevronRight size={16} aria-hidden="true" />
-            </button>
-          </div>
+            </Link>
+          </nav>}
         </div>
       </main>
 

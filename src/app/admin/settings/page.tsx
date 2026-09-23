@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Save, Settings2, Upload, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Save, Settings2, Upload, X } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
 
@@ -32,14 +32,19 @@ export default function AdminSettingsPage() {
   const [instagramUrl, setInstagramUrl] = useState("");
   const [tiktokUrl, setTiktokUrl] = useState("");
   const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [aboutStoryTitle, setAboutStoryTitle] = useState("Built with Passion, For Your Convenience");
+  const [aboutStoryText, setAboutStoryText] = useState("");
+  const [aboutStorySecondText, setAboutStorySecondText] = useState("");
+  const [aboutStoryImage, setAboutStoryImage] = useState("/about.png");
   const [message, setMessage] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     void fetch("/api/settings/shipping")
-      .then(async (response) => response.ok ? await response.json() as { rates: Record<string, number>; advanceShipping: boolean; advanceAccountNumber: string; advanceAccountTitle: string; advanceAccountName: string; logoUrl: string; storeAddress: string; storePhone: string; storeEmail: string; facebookUrl: string; instagramUrl: string; tiktokUrl: string; whatsappUrl: string } : null)
+      .then(async (response) => response.ok ? await response.json() as { rates: Record<string, number>; advanceShipping: boolean; advanceAccountNumber: string; advanceAccountTitle: string; advanceAccountName: string; logoUrl: string; storeAddress: string; storePhone: string; storeEmail: string; facebookUrl: string; instagramUrl: string; tiktokUrl: string; whatsappUrl: string; aboutStoryTitle: string; aboutStoryText: string; aboutStorySecondText: string; aboutStoryImage: string } : null)
       .then((settings) => {
         if (!settings) return;
         setRates({ ...defaultRates, ...settings.rates });
@@ -48,16 +53,19 @@ export default function AdminSettingsPage() {
         setAdvanceAccountTitle(settings.advanceAccountTitle);
         setAdvanceAccountName(settings.advanceAccountName);
         setLogoUrl(settings.logoUrl); setStoreAddress(settings.storeAddress); setStorePhone(settings.storePhone); setStoreEmail(settings.storeEmail); setFacebookUrl(settings.facebookUrl); setInstagramUrl(settings.instagramUrl); setTiktokUrl(settings.tiktokUrl); setWhatsappUrl(settings.whatsappUrl);
+        setAboutStoryTitle(settings.aboutStoryTitle); setAboutStoryText(settings.aboutStoryText); setAboutStorySecondText(settings.aboutStorySecondText); setAboutStoryImage(settings.aboutStoryImage);
       })
       .catch(() => undefined);
   }, []);
 
   async function saveSettings() {
+    if (saving) return;
+    setSaving(true);
     setMessage("");
     const response = await fetch("/api/settings/shipping", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rates, advanceShipping, advanceAccountNumber, advanceAccountTitle, advanceAccountName, logoUrl, storeAddress, storePhone, storeEmail, facebookUrl, instagramUrl, tiktokUrl, whatsappUrl }),
+      body: JSON.stringify({ rates, advanceShipping, advanceAccountNumber, advanceAccountTitle, advanceAccountName, logoUrl, storeAddress, storePhone, storeEmail, facebookUrl, instagramUrl, tiktokUrl, whatsappUrl, aboutStoryTitle, aboutStoryText, aboutStorySecondText, aboutStoryImage }),
     });
     const result = await response.json().catch(() => ({})) as { message?: string };
     if (response.ok) {
@@ -66,9 +74,11 @@ export default function AdminSettingsPage() {
     } else {
       setMessage(result.message ?? "Unable to save settings.");
     }
+    setSaving(false);
   }
 
   async function uploadLogo(file: File) {
+    if (uploadingLogo) return;
     setUploadingLogo(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -85,7 +95,7 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-800">
-      <div className="lg:pl-[248px]">
+      <div className="lg:pl-[260px]">
         <AdminSidebar activeNav="Settings" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={() => undefined} />
         <AdminHeader query="" onQueryChange={() => undefined} onOpenSidebar={() => setSidebarOpen(true)} />
         <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-8">
@@ -122,10 +132,21 @@ export default function AdminSettingsPage() {
             </div>
           </section>
 
-          <div className="mt-5 flex items-center justify-end gap-3"><p className="mr-auto text-sm text-rose-600">{message}</p><button type="button" onClick={() => void saveSettings()} className="inline-flex items-center gap-2 rounded-lg bg-[#0b1d45] px-5 py-3 text-sm font-bold text-white hover:bg-[#102d62]"><Save size={16} /> Save settings</button></div>
+          <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="font-bold text-[#0b1d45]">About page story</h2>
+            <p className="mt-1 text-xs text-slate-500">Update the Our Story section shown on the public About page.</p>
+            <div className="mt-5 grid gap-4">
+              <label className="text-sm font-semibold text-slate-700">Story heading<input value={aboutStoryTitle} onChange={(event) => setAboutStoryTitle(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+              <label className="text-sm font-semibold text-slate-700">First paragraph<textarea value={aboutStoryText} onChange={(event) => setAboutStoryText(event.target.value)} rows={4} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+              <label className="text-sm font-semibold text-slate-700">Second paragraph<textarea value={aboutStorySecondText} onChange={(event) => setAboutStorySecondText(event.target.value)} rows={3} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+              <label className="text-sm font-semibold text-slate-700">Story image URL<input value={aboutStoryImage} onChange={(event) => setAboutStoryImage(event.target.value)} placeholder="/about.png or image URL" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+            </div>
+          </section>
+
+          <div className="mt-5 flex items-center justify-end gap-3"><p className="mr-auto text-sm text-rose-600">{message}</p><button type="button" disabled={saving} onClick={() => void saveSettings()} className="inline-flex items-center gap-2 rounded-lg bg-[#0b1d45] px-5 py-3 text-sm font-bold text-white hover:bg-[#102d62] disabled:cursor-wait disabled:opacity-60">{saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} {saving ? "Saving..." : "Save settings"}</button></div>
         </main>
       </div>
-      {showSuccess && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#071b3d]/45 p-4"><div role="dialog" aria-modal="true" className="relative w-full max-w-sm rounded-2xl bg-white p-7 text-center shadow-2xl"><button type="button" aria-label="Close success message" onClick={() => setShowSuccess(false)} className="absolute right-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100"><X size={18} /></button><CheckCircle2 size={48} className="mx-auto text-emerald-500" /><h2 className="mt-4 text-xl font-bold text-[#0b1d45]">Settings saved</h2><p className="mt-2 text-sm text-slate-500">Shipping and advance payment settings have been updated.</p><button type="button" onClick={() => setShowSuccess(false)} className="mt-5 rounded-lg bg-[#0b1d45] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#102d62]">Done</button></div></div>}
+      {showSuccess && <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#071b3d]/45 p-4"><div role="dialog" aria-modal="true" className="relative max-h-[calc(100vh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-5 text-center shadow-2xl sm:p-7"><button type="button" aria-label="Close success message" onClick={() => setShowSuccess(false)} className="absolute right-3 top-3 rounded-lg p-2 text-slate-400 hover:bg-slate-100"><X size={18} /></button><CheckCircle2 size={48} className="mx-auto text-emerald-500" /><h2 className="mt-4 text-xl font-bold text-[#0b1d45]">Settings saved</h2><p className="mt-2 text-sm text-slate-500">Shipping and advance payment settings have been updated.</p><button type="button" onClick={() => setShowSuccess(false)} className="mt-5 rounded-lg bg-[#0b1d45] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#102d62]">Done</button></div></div>}
     </div>
   );
 }

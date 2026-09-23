@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, ShoppingCart, X } from "lucide-react";
+import { ArrowLeft, ChevronRight, Loader2, ShoppingCart, Trash2, X } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
+import Pagination from "../components/Pagination";
 
 type OrderStatus = "Processing" | "Shipped" | "Delivered" | "Cancelled";
 
@@ -58,6 +59,11 @@ export default function AdminOrdersPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Order | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<number | null>(null);
+  const [deletingOrderId, setDeletingOrderId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     void fetch("/api/orders")
@@ -70,18 +76,39 @@ export default function AdminOrdersPage() {
   const visibleOrders = orders.filter((order) =>
     `${order.orderNumber} ${order.customerName} ${order.email} ${order.status}`.toLowerCase().includes(query.toLowerCase()),
   );
+  const totalPages = Math.max(1, Math.ceil(visibleOrders.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedOrders = visibleOrders.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   async function updateStatus(id: number, status: OrderStatus) {
+    if (updatingOrderId !== null) return;
+    setUpdatingOrderId(id);
     const response = await fetch("/api/orders", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
-    if (!response.ok) return;
-    setOrders((current) => current.map((order) => order.id === id ? { ...order, status } : order));
+    if (response.ok) setOrders((current) => current.map((order) => order.id === id ? { ...order, status } : order));
+    setUpdatingOrderId(null);
+  }
+
+  async function deleteOrder() {
+    if (!deleteTarget || deletingOrderId !== null) return;
+    setDeletingOrderId(deleteTarget.id);
+    const response = await fetch("/api/orders", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: deleteTarget.id }),
+    });
+    if (response.ok) {
+      setOrders((current) => current.filter((order) => order.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      setSelectedOrder(null);
+    }
+    setDeletingOrderId(null);
   }
 
   const selectedItems = selectedOrder ? parseOrderItems(selectedOrder.items) : [];
 
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-800">
-      <div className="lg:pl-[248px]">
+      <div className="lg:pl-[260px]">
         <AdminSidebar activeNav="Orders" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={() => undefined} />
         <AdminHeader query={query} onQueryChange={setQuery} onOpenSidebar={() => setSidebarOpen(true)} />
         <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-8">
@@ -122,7 +149,7 @@ export default function AdminOrdersPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {visibleOrders.map((order) => {
+                    {paginatedOrders.map((order) => {
                       const productItems = parseOrderItems(order.items).slice(0, 3);
                       const remainingProducts = Math.max(0, parseOrderItems(order.items).length - productItems.length);
 
@@ -158,8 +185,8 @@ export default function AdminOrdersPage() {
                           <td className="px-6 py-4 text-xs text-slate-500">{order.city}, {order.province}</td>
                           <td className="px-6 py-4 text-xs text-slate-500">{new Date(order.createdAt).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}</td>
                           <td className="px-6 py-4 font-semibold text-slate-700">Rs. {Number(order.total).toLocaleString("en-PK")}</td>
-                          <td className="px-6 py-4"><select value={order.status} onChange={(event) => void updateStatus(order.id, event.target.value as OrderStatus)} className={`rounded-full border-0 px-2.5 py-1 text-[11px] font-bold outline-none ${statusStyles[order.status]}`}><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select></td>
-                          <td className="px-6 py-4 text-right"><ChevronRight size={17} className="text-slate-400" /></td>
+                          <td className="px-6 py-4"><span className="inline-flex items-center gap-1"><select disabled={updatingOrderId !== null} value={order.status} onChange={(event) => void updateStatus(order.id, event.target.value as OrderStatus)} className={`rounded-full border-0 px-2.5 py-1 text-[11px] font-bold outline-none disabled:cursor-wait disabled:opacity-60 ${statusStyles[order.status]}`}><option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option></select>{updatingOrderId === order.id && <Loader2 size={13} className="animate-spin text-slate-400" />}</span></td>
+                          <td className="px-6 py-4 text-right"><div className="flex items-center justify-end gap-2"><button type="button" aria-label={`Delete ${order.orderNumber}`} onClick={(event) => { event.stopPropagation(); setDeleteTarget(order); }} className="rounded-lg p-2 text-rose-500 hover:bg-rose-50"><Trash2 size={15} /></button><ChevronRight size={17} className="text-slate-400" /></div></td>
                         </tr>
                       );
                     })}
@@ -167,13 +194,23 @@ export default function AdminOrdersPage() {
                 </table>
               </div>
             )}
+            <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </section>
         </main>
       </div>
 
+      {deleteTarget ? (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+            <div className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-500"><Trash2 size={19} /></span><div><h2 className="text-lg font-bold text-[#0b1d45]">Delete order?</h2><p className="mt-1 text-sm text-slate-500">This will permanently delete <span className="font-semibold text-slate-700">{deleteTarget.orderNumber}</span>.</p></div></div>
+            <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setDeleteTarget(null)} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button><button type="button" onClick={() => void deleteOrder()} disabled={deletingOrderId !== null} className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-600 disabled:cursor-wait disabled:opacity-60">{deletingOrderId !== null ? "Deleting..." : "Delete order"}</button></div>
+          </div>
+        </div>
+      ) : null}
+
       {selectedOrder ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm">
-          <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-900/20 sm:p-6">
+          <div className="max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-4 shadow-2xl shadow-slate-900/20 sm:max-h-[90vh] sm:p-6">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0b75a5]">Order details</p>

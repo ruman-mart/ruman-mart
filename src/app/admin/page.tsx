@@ -29,6 +29,17 @@ type Order = {
   items?: unknown;
 };
 
+type Inquiry = {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  status: "New" | "Read" | "Resolved";
+  createdAt: string;
+};
+
 type ProductStat = {
   name: string;
   sold: number;
@@ -85,6 +96,7 @@ export default function AdminPage() {
   const [activeNav, setActiveNav] = useState("Overview");
   const [period, setPeriod] = useState("Last 30 days");
   const [query, setQuery] = useState("");
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
 
   useEffect(() => {
     void fetch("/api/orders")
@@ -118,6 +130,15 @@ export default function AdminPage() {
       })
       .catch(() => setOrders([]));
   }, []);
+
+  useEffect(() => {
+    void fetch("/api/inquiries", { cache: "no-store" })
+      .then(async (response) => response.ok ? await response.json() as Inquiry[] : [])
+      .then(setInquiries)
+      .catch(() => setInquiries([]));
+  }, []);
+
+          <section className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]"><div className="flex items-center justify-between p-5 sm:p-6"><div><h2 className="font-bold text-[#0b1d45]">Customer inquiries</h2><p className="mt-1 text-xs text-slate-400">Messages submitted through the contact form</p></div><span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-bold text-[#0b75a5]">{inquiries.filter((inquiry) => inquiry.status === "New").length} new</span></div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left"><thead className="border-y border-slate-100 bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-400"><tr><th className="px-6 py-3">Customer</th><th className="px-6 py-3">Subject</th><th className="px-6 py-3">Message</th><th className="px-6 py-3">Date</th><th className="px-6 py-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{inquiries.slice(0, 10).map((inquiry) => <tr key={inquiry.id} className="text-sm hover:bg-slate-50/70"><td className="px-6 py-4"><p className="font-semibold text-slate-700">{inquiry.name}</p><p className="text-xs text-slate-400">{inquiry.email}{inquiry.phone ? ` · ${inquiry.phone}` : ""}</p></td><td className="px-6 py-4 font-semibold text-[#0b1d45]">{inquiry.subject}</td><td className="max-w-xs px-6 py-4 text-xs text-slate-500"><p className="truncate">{inquiry.message}</p></td><td className="px-6 py-4 text-xs text-slate-500">{new Date(inquiry.createdAt).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}</td><td className="px-6 py-4"><span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${inquiry.status === "New" ? "bg-cyan-50 text-[#0b75a5]" : inquiry.status === "Resolved" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{inquiry.status}</span></td></tr>)}{inquiries.length === 0 && <tr><td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-400">No inquiries yet.</td></tr>}</tbody></table></div></section>
 
   const topProducts = useMemo(() => {
     const productMap = new Map<string, ProductStat>();
@@ -193,7 +214,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-800">
-      <div className="lg:pl-[248px]">
+      <div className="lg:pl-[260px]">
         <AdminSidebar activeNav={activeNav} sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={setActiveNav} />
         <AdminHeader query={query} onQueryChange={setQuery} onOpenSidebar={() => setSidebarOpen(true)} />
 

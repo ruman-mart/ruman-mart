@@ -16,12 +16,14 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AddToCartButton from "../components/AddToCartButton";
+import WishlistButton from "../components/WishlistButton";
 
 type Product = {
   id: string;
   name: string;
   brand: string;
   category: string;
+  categorySlug?: string;
   price: number;
   originalPrice: number;
   rating: number;
@@ -63,6 +65,10 @@ function formatPrice(price: number) {
   return `Rs. ${price.toLocaleString("en-PK")}`;
 }
 
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 function StarRating({ rating, size = 12 }: { rating: number; size?: number }) {
   return (
     <div className="flex">
@@ -88,6 +94,7 @@ export default function ProductsPage() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>(allProducts);
   const [filters, setFilters] = useState(categoryFilters);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     let mounted = true;
@@ -104,7 +111,7 @@ export default function ProductsPage() {
           rating?: number | string;
           reviews?: number;
           image?: string;
-          category?: { name?: string };
+          category?: { name?: string; slug?: string };
           inStock?: boolean;
         }>;
       })
@@ -115,6 +122,7 @@ export default function ProductsPage() {
           name: product.name,
           brand: product.brand,
           category: product.category?.name ?? "Other",
+          categorySlug: product.category?.slug ?? "electronics",
           price: Number(product.price),
           originalPrice: Number(product.originalPrice),
           rating: Number(product.rating ?? 0),
@@ -141,6 +149,20 @@ export default function ProductsPage() {
     if (sortBy === "rating") return b.rating - a.rating;
     return b.reviews - a.reviews; // popularity default
   });
+  const pageSize = 12;
+  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / pageSize));
+  const visibleProducts = sortedProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageNumbers = totalPages <= 7
+    ? Array.from({ length: totalPages }, (_, index) => index + 1)
+    : Array.from(new Set([1, currentPage - 1, currentPage, currentPage + 1, totalPages])).filter((page) => page > 0 && page <= totalPages).sort((a, b) => a - b);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory, sortBy]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f5f7fb] font-sans text-slate-800">
@@ -387,53 +409,23 @@ export default function ProductsPage() {
   </div>
 ) : viewMode === "grid" ? (
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-    {sortedProducts.map((product) => (
-      <article
-        key={product.id}
-        className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-      >
-        <Link
-          href={`/products/${product.id}`}
-          className="contents"
-        >
-          {/* Product image */}
-          <div className="relative flex h-44 items-center justify-center bg-white px-4 pt-4 sm:h-40">
-            {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
-                -{product.discount}%
-              </span>}
-
-            <img
-              src={product.image}
-              alt={product.name}
-              className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-            />
+    {visibleProducts.map((product) => (
+      <article key={product.id} className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+        <div className="relative flex h-40 items-center justify-center bg-white px-4 pt-4">
+          <WishlistButton product={product} />
+          {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">-{product.discount}%</span>}
+          <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        </div>
+        <div className="flex flex-1 flex-col gap-1 px-4 pb-4 pt-3">
+          <h3 className="truncate text-sm font-bold text-[#0b1d45]">{product.name}</h3>
+          <p className="text-xs text-slate-500">{product.brand}</p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-base font-bold text-[#0b1d45]">{formatPrice(product.price)}</span>
+            {product.originalPrice > product.price && product.discount > 0 && <span className="text-xs text-slate-400 line-through">{formatPrice(product.originalPrice)}</span>}
           </div>
-
-          {/* Product info */}
-          <div className="flex flex-1 flex-col gap-1 px-4 pb-4 pt-3">
-            <p className="text-xs text-[#0b75a5]">
-              {product.brand}
-            </p>
-
-            <h3 className="truncate text-sm font-bold text-[#0b1d45]">
-              {product.name}
-            </h3>
-
-            <div className="mt-1 flex flex-wrap items-baseline gap-2">
-              <span className="text-base font-bold text-[#0b1d45]">
-                {formatPrice(product.price)}
-              </span>
-
-              {product.originalPrice > product.price && product.discount > 0 && <span className="text-xs text-slate-400 line-through">
-                  {formatPrice(product.originalPrice)}
-                </span>}
-            </div>
-          </div>
-        </Link>
-
-        {/* Add to Cart */}
-        <div className="px-4 pb-4">
-          <AddToCartButton productSlug={product.id} name={product.name} price={product.price} image={product.image} />
+          <Link href={`/categories/${product.categorySlug || slugify(product.category)}/${product.id}`} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90">
+            View Product <ChevronRight size={14} aria-hidden="true" />
+          </Link>
         </div>
       </article>
     ))}
@@ -441,7 +433,7 @@ export default function ProductsPage() {
 ) : (
   /* List view */
   <div className="flex flex-col gap-4">
-    {sortedProducts.map((product) => (
+    {visibleProducts.map((product) => (
       <article
         key={product.id}
         className="group flex flex-col gap-4 overflow-hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md sm:flex-row"
@@ -494,36 +486,23 @@ export default function ProductsPage() {
   </div>
 )}
               {/* Pagination */}
-              {sortedProducts.length > 0 && (
-                <div className="mt-8 flex items-center justify-center gap-1.5">
-                  <button
-                    type="button"
-                    aria-label="Previous page"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
-                  >
+              {totalPages > 1 && (
+                <nav aria-label="Products pagination" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
+                  <button type="button" aria-label="Previous page" disabled={currentPage === 1} onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300">
                     <ChevronRight size={16} className="rotate-180" aria-hidden="true" />
                   </button>
-                  {[1, 2, 3].map((page) => (
-                    <button
-                      key={page}
-                      type="button"
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold ${
-                        page === 1
-                          ? "bg-[#19c9ee] text-white"
-                          : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                      }`}
-                    >
-                      {page}
-                    </button>
+                  {pageNumbers.map((page, index) => (
+                    <span key={page} className="flex items-center gap-1.5">
+                      {index > 0 && page - pageNumbers[index - 1] > 1 && <span className="px-1 text-sm text-slate-400">...</span>}
+                      <button type="button" onClick={() => setCurrentPage(page)} className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold ${page === currentPage ? "bg-[#19c9ee] text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>
+                        {page}
+                      </button>
+                    </span>
                   ))}
-                  <button
-                    type="button"
-                    aria-label="Next page"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:bg-slate-50"
-                  >
+                  <button type="button" aria-label="Next page" disabled={currentPage === totalPages} onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300">
                     <ChevronRight size={16} aria-hidden="true" />
                   </button>
-                </div>
+                </nav>
               )}
             </div>
           </div>

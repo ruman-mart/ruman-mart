@@ -129,6 +129,11 @@ export default function MarqueeStrip() {
         }
         .ruman-marquee {
           animation: ruman-marquee 38s linear infinite;
+          will-change: transform;
+          transform: translate3d(0, 0, 0);
+        }
+        @media (max-width: 640px) {
+          .ruman-marquee { animation-duration: 22s; }
         }
         .ruman-marquee:hover {
           animation-play-state: paused;

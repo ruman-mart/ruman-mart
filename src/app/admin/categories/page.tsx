@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
+import Pagination from "../components/Pagination";
 
 type Category = {
   id: number;
@@ -40,6 +41,11 @@ export default function AdminCategoriesPage() {
   const [imagePreview, setImagePreview] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   async function fetchCategories() {
     const response = await fetch("/api/categories");
@@ -86,6 +92,8 @@ export default function AdminCategoriesPage() {
   }
 
   async function saveCategory(event: React.FormEvent<HTMLFormElement>) {
+    if (saving) return;
+    setSaving(true);
     event.preventDefault();
     setMessage("");
     let image = form.image;
@@ -96,6 +104,7 @@ export default function AdminCategoriesPage() {
       const uploadResult = (await uploadResponse.json().catch(() => ({}))) as { url?: string; message?: string };
       if (!uploadResponse.ok || !uploadResult.url) {
         setMessage(uploadResult.message ?? "Unable to upload image.");
+        setSaving(false);
         return;
       }
       image = uploadResult.url;
@@ -113,16 +122,19 @@ export default function AdminCategoriesPage() {
     };
     if (!response.ok) {
       setMessage(result.message ?? "Unable to save category.");
+      setSaving(false);
       return;
     }
     setShowForm(false);
     setImageFile(null);
     setImagePreview("");
     setCategories(await fetchCategories());
+    setSaving(false);
   }
 
   async function confirmDelete() {
-    if (!deleteTarget) return;
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
     const response = await fetch(`/api/categories/${deleteTarget.id}`, {
       method: "DELETE",
     });
@@ -130,22 +142,26 @@ export default function AdminCategoriesPage() {
       setDeleteTarget(null);
       setCategories(await fetchCategories());
     }
+    setDeleting(false);
   }
+
+  const filteredCategories = categories.filter((category) =>
+    `${category.name} ${category.slug} ${category.description ?? ""}`.toLowerCase().includes(query.toLowerCase()),
+  );
+  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const visibleCategories = filteredCategories.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-800">
-      <div className="lg:pl-[248px]">
+      <div className="lg:pl-[280px]">
         <AdminSidebar
           activeNav="Categories"
           sidebarOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           onSelect={() => undefined}
         />
-        <AdminHeader
-          query=""
-          onQueryChange={() => undefined}
-          onOpenSidebar={() => setSidebarOpen(true)}
-        />
+        <AdminHeader query={query} onQueryChange={(value) => { setQuery(value); setCurrentPage(1); }} searchPlaceholder="Search categories..." onOpenSidebar={() => setSidebarOpen(true)} />
 
         <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-8">
           <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -189,7 +205,7 @@ export default function AdminCategoriesPage() {
               </p>
             ) : (
               <div className="divide-y divide-slate-100">
-                {categories.map((category) => (
+                {visibleCategories.map((category) => (
                   <div
                     key={category.id}
                     className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:px-6"
@@ -241,13 +257,14 @@ export default function AdminCategoriesPage() {
                 )}
               </div>
             )}
+            <Pagination currentPage={safePage} totalPages={totalPages} onPageChange={setCurrentPage} />
           </section>
         </main>
       </div>
 
       {showForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#071b3d]/50 p-4">
-          <section className="my-8 w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6">
+          <section className="my-4 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:my-8 sm:max-h-[calc(100vh-4rem)] sm:p-6">
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="font-bold text-[#0b1d45]">
@@ -340,7 +357,7 @@ export default function AdminCategoriesPage() {
                   type="submit"
                   className="rounded-lg bg-[#1fb6e6] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0b9dcc]"
                 >
-                  {editingId ? "Save changes" : "Create category"}
+                  {saving ? <><Loader2 size={15} className="mr-2 inline animate-spin" />Saving...</> : editingId ? "Save changes" : "Create category"}
                 </button>
                 <button
                   type="button"
@@ -360,7 +377,7 @@ export default function AdminCategoriesPage() {
           <section
             role="alertdialog"
             aria-modal="true"
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+            className="max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-rose-50 text-rose-500">
               <Trash2 size={19} />
@@ -384,9 +401,10 @@ export default function AdminCategoriesPage() {
               </button>
               <button
                 onClick={() => void confirmDelete()}
-                className="rounded-lg bg-rose-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-600"
+                disabled={deleting}
+                className="rounded-lg bg-rose-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-rose-600 disabled:cursor-wait disabled:opacity-60"
               >
-                Delete
+                {deleting ? <><Loader2 size={15} className="mr-2 inline animate-spin" />Deleting...</> : "Delete"}
               </button>
             </div>
           </section>

@@ -22,15 +22,6 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-const categories = [
-  "Mobiles & Tablets",
-  "Electronics",
-  "Fashion",
-  "Home & Kitchen",
-  "Beauty & Health",
-  "Sports & Outdoor",
-];
-
 const CART_STORAGE_KEY = "ruman-cart";
 const WISHLIST_STORAGE_KEY = "ruman-wishlist";
 
@@ -70,6 +61,7 @@ export default function Navbar() {
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [logoUrl, setLogoUrl] = useState("/logo-web.png");
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     void fetch("/api/settings/shipping").then(async (response) => {
@@ -85,6 +77,17 @@ export default function Navbar() {
         setProducts(Array.isArray(data) ? data : []);
       })
       .catch(() => setProducts([]));
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/categories", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return [];
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+      })
+      .then(setCategories)
+      .catch(() => setCategories([]));
   }, []);
 
   useEffect(() => {
@@ -230,8 +233,8 @@ export default function Navbar() {
             Wishlist
           </Link>
 
-          <Link href="/cart" aria-label="Cart" className="relative">
-            <ShoppingCart size={22} strokeWidth={1.75} />
+          <Link href="/cart" aria-label="Cart" className="relative flex h-11 w-11 items-center justify-center md:h-auto md:w-auto">
+            <ShoppingCart size={28} strokeWidth={1.75} />
             {cartCount > 0 && (
               <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#1fb6e6] text-[11px] font-semibold">
                 {cartCount}
@@ -242,9 +245,9 @@ export default function Navbar() {
           <button
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
-            className="md:hidden"
+            className="flex h-11 w-11 items-center justify-center md:hidden"
           >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            {menuOpen ? <X size={30} /> : <Menu size={30} />}
           </button>
         </div>
 
@@ -276,14 +279,12 @@ export default function Navbar() {
                   {link.hasDropdown && catOpen && (
                     <ul className="absolute left-0 top-full z-50 w-56 overflow-hidden rounded-md bg-white py-2 text-slate-700 shadow-xl">
                       {categories.map((cat) => (
-                        <li key={cat}>
+                        <li key={cat.id ?? cat.slug}>
                           <Link
-                            href={`/categories/${cat
-                              .toLowerCase()
-                              .replace(/[^a-z]+/g, "-")}`}
+                            href={`/categories/${cat.slug}`}
                             className="block px-4 py-2 text-sm hover:bg-slate-100 hover:text-[#0b1d45]"
                           >
-                            {cat}
+                            {cat.name}
                           </Link>
                         </li>
                       ))}

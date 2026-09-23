@@ -13,6 +13,8 @@ import {
   Tag,
   MessageSquare,
   Send,
+  CheckCircle2,
+  Loader2,
   Navigation,
   type LucideIcon,
 } from "lucide-react";
@@ -53,6 +55,9 @@ const subjects = [
 
 export default function ContactPage() {
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [formMessage, setFormMessage] = useState("");
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [site, setSite] = useState({ storeAddress: STORE_ADDRESS, storePhone: "+92 304 1298136", storeEmail: "rumanshakee56@gmail.com", whatsappUrl: "https://wa.me/923041298136?text=Hello%20Ruman%20Mart" });
   useEffect(() => {
     void fetch("/api/settings/shipping")
@@ -69,6 +74,34 @@ export default function ContactPage() {
     { Icon: Mail, title: "Email", lines: [site.storeEmail, "We reply within 24 hours"] },
     { Icon: MapPin, title: "Our Address", lines: [site.storeAddress] },
   ];
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const message = String(formData.get("message") ?? "").trim();
+    const saveResponse = await fetch("/api/inquiries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, phone, subject: selectedSubject, message }),
+    });
+    if (!saveResponse.ok) {
+      const result = await saveResponse.json().catch(() => ({})) as { message?: string };
+      setFormMessage(result.message ?? "Unable to send inquiry.");
+      setSubmitting(false);
+      return;
+    }
+    form.reset();
+    setSelectedSubject("");
+    setFormMessage("");
+    setSuccessOpen(true);
+    setSubmitting(false);
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f5f7fb] font-sans text-slate-800">
@@ -222,7 +255,7 @@ export default function ContactPage() {
                 as possible.
               </p>
 
-              <form className="mt-6 flex flex-col gap-4">
+              <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="contact-input relative">
                     <User
@@ -231,7 +264,9 @@ export default function ContactPage() {
                       aria-hidden="true"
                     />
                     <input
+                      name="name"
                       type="text"
+                      required
                       placeholder="Your Name *"
                       className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-3.5 text-sm transition-shadow focus:border-[#19c9ee] focus:outline-none focus:ring-2 focus:ring-[#19c9ee]/30"
                     />
@@ -243,7 +278,9 @@ export default function ContactPage() {
                       aria-hidden="true"
                     />
                     <input
+                      name="email"
                       type="email"
+                      required
                       placeholder="Your Email *"
                       className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-3.5 text-sm transition-shadow focus:border-[#19c9ee] focus:outline-none focus:ring-2 focus:ring-[#19c9ee]/30"
                     />
@@ -257,6 +294,7 @@ export default function ContactPage() {
                     aria-hidden="true"
                   />
                   <input
+                    name="phone"
                     type="tel"
                     placeholder="Your Phone Number"
                     className="w-full rounded-lg border border-slate-200 py-2.5 pl-10 pr-3.5 text-sm transition-shadow focus:border-[#19c9ee] focus:outline-none focus:ring-2 focus:ring-[#19c9ee]/30"
@@ -270,6 +308,7 @@ export default function ContactPage() {
                     aria-hidden="true"
                   />
                   <select
+                    required
                     value={selectedSubject}
                     onChange={(e) => setSelectedSubject(e.target.value)}
                     className="w-full appearance-none rounded-lg border border-slate-200 py-2.5 pl-10 pr-8 text-sm text-slate-700 transition-shadow focus:border-[#19c9ee] focus:outline-none focus:ring-2 focus:ring-[#19c9ee]/30"
@@ -297,7 +336,9 @@ export default function ContactPage() {
                     aria-hidden="true"
                   />
                   <textarea
+                    name="message"
                     rows={5}
+                    required
                     placeholder="Your Message *"
                     className="w-full resize-none rounded-lg border border-slate-200 py-2.5 pl-10 pr-3.5 text-sm transition-shadow focus:border-[#19c9ee] focus:outline-none focus:ring-2 focus:ring-[#19c9ee]/30"
                   />
@@ -305,15 +346,13 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="group mt-1 inline-flex items-center justify-center gap-2 rounded-lg bg-[#19c9ee] py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#0db4d8] hover:shadow-lg hover:shadow-[#19c9ee]/30"
+                  disabled={submitting}
+                  className="group mt-1 inline-flex items-center justify-center gap-2 rounded-lg bg-[#19c9ee] py-3 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#0db4d8] hover:shadow-lg hover:shadow-[#19c9ee]/30 disabled:cursor-wait disabled:opacity-70"
                 >
-                  Send Message
-                  <Send
-                    size={16}
-                    className="transition-transform duration-300 group-hover:translate-x-1"
-                    aria-hidden="true"
-                  />
+                  {submitting ? "Sending..." : "Send Message"}
+                  {submitting ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Send size={16} className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />}
                 </button>
+                {formMessage && <p className="text-sm font-medium text-rose-600">{formMessage}</p>}
               </form>
             </div>
 
@@ -424,6 +463,22 @@ export default function ContactPage() {
       </main>
 
       <Footer />
+      {successOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#031a3b]/55 p-4 backdrop-blur-sm">
+          <div role="dialog" aria-modal="true" aria-labelledby="inquiry-success-title" className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/60 bg-white p-7 text-center shadow-2xl shadow-[#031a3b]/30">
+            <button type="button" aria-label="Close success message" onClick={() => setSuccessOpen(false)} className="absolute right-3 top-3 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700">
+              <span className="text-xl leading-none">&times;</span>
+            </button>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 shadow-inner">
+              <CheckCircle2 size={38} strokeWidth={2.2} />
+            </div>
+            <p className="mt-5 text-xs font-bold uppercase tracking-[0.2em] text-[#0b75a5]">Message received</p>
+            <h2 id="inquiry-success-title" className="mt-2 text-2xl font-bold text-[#0b1d45]">Thank you for contacting us</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">Your inquiry has been sent successfully. Our team will get back to you soon.</p>
+            <button type="button" onClick={() => setSuccessOpen(false)} className="mt-6 w-full rounded-lg bg-[#0b1d45] py-3 text-sm font-bold text-white transition-colors hover:bg-[#102d62]">Done</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

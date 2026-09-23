@@ -10,6 +10,9 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CategoryModel from "@/lib/models/Category";
+import ProductModel from "@/lib/models/Product";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Shop by Category",
@@ -54,13 +57,13 @@ const benefits = [
 ];
 
 export default async function CategoriesPage() {
-  const databaseCategories = (await CategoryModel.findAll({ where: { isActive: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ name: string; image: string; slug: string }>;
-  const visibleCategories: Category[] = databaseCategories.map((category) => ({
+  const databaseCategories = (await CategoryModel.findAll({ where: { isActive: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ id: number; name: string; image: string; slug: string }>;
+  const visibleCategories: Category[] = await Promise.all(databaseCategories.map(async (category) => ({
     name: category.name,
     image: category.image,
-    productCount: 0,
+    productCount: await ProductModel.count({ where: { categoryId: category.id, isActive: true } }),
     slug: category.slug,
-  }));
+  })));
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f7fafc] text-slate-800">

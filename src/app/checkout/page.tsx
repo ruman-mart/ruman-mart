@@ -135,9 +135,9 @@ export default function CheckoutPage() {
   const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.qty, 0);
   const provinceShippingRate = shippingRates.find((r) => r.id === province)?.price ?? 0;
   const shippingDisplayCost = provinceShippingRate;
-  const shippingCost = 0;
+  const shippingCost = advanceShipping ? 0 : shippingDisplayCost;
   const discount = 0;
-  const total = advanceShipping ? subtotal : subtotal + shippingDisplayCost - discount;
+  const total = subtotal + shippingCost - discount;
   const whatsappLink = toWhatsappLink(whatsappUrl);
   const availablePaymentMethods = advanceShipping
     ? [{ id: "advance-shipping", Icon: Truck, title: "Shipping Advance", subtitle: "Pay shipping charges in advance" }]
@@ -179,10 +179,18 @@ export default function CheckoutPage() {
     const orderSnapshot = {
       orderNumber: result.orderNumber ?? `RM-${Date.now().toString().slice(-8)}`,
       orderDate: new Date().toISOString(),
+      customerName: formData.get("customerName"),
+      phone: formData.get("phone"),
+      email: formData.get("email"),
+      address: formData.get("address"),
+      province: shippingRates.find((rate) => rate.id === province)?.label ?? province,
+      city: city === "Other city" ? otherCity : city,
+      postalCode: formData.get("postalCode"),
+      country: formData.get("country") ?? "Pakistan",
       paymentMethod,
       items: orderItems,
       subtotal,
-      shippingCost: 0,
+      shippingCost,
       discount,
       total,
     };
@@ -558,7 +566,7 @@ export default function CheckoutPage() {
                         </span>
                       </span>
                       <span className="font-semibold text-[#0b1d45]">
-                        {formatPrice(shippingCost)}
+                        {formatPrice(advanceShipping ? 0 : shippingDisplayCost)}
                       </span>
                     </div>
                   )}

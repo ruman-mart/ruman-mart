@@ -18,6 +18,10 @@ const ShippingSettings = sequelize.define(
     instagramUrl: { type: DataTypes.STRING(500), allowNull: true, field: "instagram_url" },
     tiktokUrl: { type: DataTypes.STRING(500), allowNull: true, field: "tiktok_url" },
     whatsappUrl: { type: DataTypes.STRING(500), allowNull: true, field: "whatsapp_url" },
+    aboutStoryTitle: { type: DataTypes.STRING(180), allowNull: true, field: "about_story_title" },
+    aboutStoryText: { type: DataTypes.TEXT, allowNull: true, field: "about_story_text" },
+    aboutStorySecondText: { type: DataTypes.TEXT, allowNull: true, field: "about_story_second_text" },
+    aboutStoryImage: { type: DataTypes.STRING(500), allowNull: true, field: "about_story_image" },
   },
   { tableName: "shipping_settings", underscored: true, timestamps: true },
 );

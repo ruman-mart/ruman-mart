@@ -49,6 +49,14 @@ type OrderRecord = {
 type OrderSnapshot = {
   orderNumber: string;
   orderDate: string;
+  customerName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  province?: string;
+  city?: string;
+  postalCode?: string;
+  country?: string;
   paymentMethod: string;
   items: OrderItem[];
   subtotal: number;
@@ -66,18 +74,8 @@ function normalizeOrderNumber(value: string) {
 }
 
 function paymentMethodLabel(value?: string) {
-  switch (value) {
-    case "advance-shipping":
-      return "Shipping Advance";
-    case "cod":
-      return "Cash on Delivery";
-    case "cash-on-delivery":
-      return "Cash on Delivery";
-    case "card":
-      return "Card Payment";
-    default:
-      return value ? value.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()) : "Cash on Delivery";
-  }
+  void value;
+  return "Cash on Delivery";
 }
 
 export default function OrderDetailsPage() {
@@ -101,17 +99,17 @@ export default function OrderDetailsPage() {
         if (savedOrder) {
           const parsed = JSON.parse(savedOrder) as Partial<OrderSnapshot>;
           const snapshotOrderNumber = normalizeOrderNumber(parsed.orderNumber ?? "");
-          if (snapshotOrderNumber && normalizedRouteId && snapshotOrderNumber === normalizedRouteId) {
+          if (snapshotOrderNumber && normalizedRouteId && snapshotOrderNumber === normalizedRouteId && parsed.address && parsed.city) {
             const snapshotOrder: OrderRecord = {
               orderNumber: parsed.orderNumber ?? routeOrderId,
-              customerName: "Customer",
-              phone: "",
-              email: "",
-              address: "",
-              province: "",
-              city: "",
-              postalCode: "",
-              country: "Pakistan",
+              customerName: parsed.customerName,
+              phone: parsed.phone,
+              email: parsed.email,
+              address: parsed.address,
+              province: parsed.province,
+              city: parsed.city,
+              postalCode: parsed.postalCode,
+              country: parsed.country ?? "Pakistan",
               items: parsed.items ?? [],
               subtotal: Number(parsed.subtotal ?? 0),
               shippingCost: Number(parsed.shippingCost ?? 0),
@@ -193,7 +191,9 @@ export default function OrderDetailsPage() {
   const shippingAddress = order?.address || "Address not available";
   const shippingCity = [order?.city, order?.postalCode].filter(Boolean).join(", ") || "City not available";
   const shippingCountry = order?.country || "Pakistan";
-  const shippingMethod = shipping > 0 ? "Standard Shipping" : "Shipping Advance";
+  const shippingMethod = order?.paymentMethod === "advance-shipping"
+    ? "Shipping Advance"
+    : "Standard Shipping";
 
   if (loading) {
     return (
