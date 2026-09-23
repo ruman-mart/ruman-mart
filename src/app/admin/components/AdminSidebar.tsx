@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, LayoutDashboard, Loader2, LogOut, Mail, PackageSearch, Settings, ShoppingCart, Tags, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const navigation = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin" },
@@ -23,6 +23,14 @@ type Props = {
 export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect }: Props) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("/logo-web.png");
+
+  useEffect(() => {
+    void fetch("/api/settings/shipping", { cache: "no-store" })
+      .then(async (response) => response.ok ? await response.json() as { logoUrl?: string } : null)
+      .then((settings) => setLogoUrl(settings?.logoUrl || "/logo-web.png"))
+      .catch(() => setLogoUrl("/logo-web.png"));
+  }, []);
 
   async function handleLogout() {
     if (loggingOut) return;
@@ -39,7 +47,9 @@ export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect
         <div className="pointer-events-none absolute inset-0 opacity-[0.11]" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(255,255,255,1) 24px, rgba(255,255,255,1) 25px), repeating-linear-gradient(90deg, transparent, transparent 24px, rgba(255,255,255,1) 24px, rgba(255,255,255,1) 25px)" }} />
         <div className="relative z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/10 px-3 py-3">
           <Link href="/admin" onClick={onClose} className="flex items-center gap-2.5">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-white/20 bg-white/15 text-sm font-black text-white shadow-lg">RM</span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/20 bg-white/15 text-sm font-black text-white shadow-lg">
+              <img src={logoUrl} alt="Ruman Mart logo" onError={() => setLogoUrl("/logo-web.png")} className="h-full w-full object-contain p-1" />
+            </span>
             <span><span className="block text-base font-bold tracking-tight">Ruman<span className="text-[#7deaff]">Mart</span></span><span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[0.2em] text-white/45">Admin Console</span></span>
           </Link>
           <button aria-label="Close navigation" onClick={onClose} className="rounded-xl p-2 text-white/55 hover:bg-white/10 hover:text-white lg:hidden"><X size={18} /></button>

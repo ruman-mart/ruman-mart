@@ -26,9 +26,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Ruman Mart" }],
   creator: "Ruman Mart",
   icons: {
-    icon: [{ url: "/logo-web.png?v=2", type: "image/png" }],
-    shortcut: ["/logo-web.png?v=2"],
-    apple: [{ url: "/logo-web.png?v=2", type: "image/png" }],
+    icon: [{ url: "/favicon.svg?v=1", type: "image/svg+xml" }],
+    shortcut: ["/favicon.svg?v=1"],
+    apple: ["/favicon.svg?v=1"],
   },
   alternates: { canonical: "/" },
   openGraph: {
@@ -56,6 +56,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="icon" href="/favicon.svg?v=1" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/favicon.svg?v=1" type="image/svg+xml" />
+      </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <NavigationProgress />
         {children}
