@@ -18,6 +18,8 @@ import CategoryModel from "@/lib/models/Category";
 import ProductModel from "@/lib/models/Product";
 import MarqueeStrip from "./components/MarqueeStrip";
 
+export const dynamic = "force-dynamic";
+
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "OnlineStore",
