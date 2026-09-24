@@ -145,11 +145,11 @@ export default async function NewArrivalsPage() {
       <main className="flex-1">
         <section className="relative isolate overflow-hidden bg-[#031a3b]">
           <div
-            className="absolute inset-0 bg-[url('/mobile-hero.png')] bg-cover bg-center sm:hidden"
+            className="absolute inset-0 bg-[url('/mobile-hero.webp')] bg-cover bg-center sm:hidden"
             aria-hidden="true"
           />
           <div
-            className="absolute inset-0 hidden bg-[url('/hero.png')] bg-cover bg-center sm:block"
+            className="absolute inset-0 hidden bg-[url('/hero.webp')] bg-cover bg-center sm:block"
             aria-hidden="true"
           />
           {/* Dark Blue Overlay */}

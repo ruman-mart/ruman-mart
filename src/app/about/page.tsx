@@ -50,7 +50,7 @@ const defaultProfile: WebsiteProfile = {
   aboutStoryTitle: "Built with Passion, For Your Convenience",
   aboutStoryText: "Ruman Mart began with a simple idea: to put quality products within reach of every home at a fair price. Starting in Hala, we have grown from a single store into a presence across Instagram, TikTok, Facebook, WhatsApp, and our flagship store at Shakeel Shopping Centre, Tariq Road.",
   aboutStorySecondText: "Today we proudly serve customers across Pakistan with a wide and growing range of products.",
-  aboutStoryImage: "/about.png",
+  aboutStoryImage: "/about.webp",
 };
 
 async function getWebsiteProfile(): Promise<WebsiteProfile> {
@@ -125,12 +125,12 @@ export default async function AboutPage() {
    {/* Hero */}
 <section className="relative isolate overflow-hidden bg-[#031a3b]">
   <div
-    className="absolute inset-0 bg-[url('/mobile-hero.png')] bg-cover bg-center sm:hidden"
+    className="absolute inset-0 bg-[url('/mobile-hero.webp')] bg-cover bg-center sm:hidden"
     aria-hidden="true"
   />
 
   <div
-    className="absolute inset-0 hidden bg-[url('/hero.png')] bg-cover bg-center sm:block"
+    className="absolute inset-0 hidden bg-[url('/hero.webp')] bg-cover bg-center sm:block"
     aria-hidden="true"
   />
 

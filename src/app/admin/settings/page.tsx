@@ -24,7 +24,7 @@ export default function AdminSettingsPage() {
   const [advanceAccountNumber, setAdvanceAccountNumber] = useState("");
   const [advanceAccountTitle, setAdvanceAccountTitle] = useState("");
   const [advanceAccountName, setAdvanceAccountName] = useState("");
-  const [logoUrl, setLogoUrl] = useState("/logo-web.png");
+  const [logoUrl, setLogoUrl] = useState("/logo-web.webp");
   const [storeAddress, setStoreAddress] = useState("");
   const [storePhone, setStorePhone] = useState("");
   const [storeEmail, setStoreEmail] = useState("");
@@ -35,7 +35,7 @@ export default function AdminSettingsPage() {
   const [aboutStoryTitle, setAboutStoryTitle] = useState("Built with Passion, For Your Convenience");
   const [aboutStoryText, setAboutStoryText] = useState("");
   const [aboutStorySecondText, setAboutStorySecondText] = useState("");
-  const [aboutStoryImage, setAboutStoryImage] = useState("/about.png");
+  const [aboutStoryImage, setAboutStoryImage] = useState("/about.webp");
   const [message, setMessage] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -121,7 +121,7 @@ export default function AdminSettingsPage() {
             <h2 className="font-bold text-[#0b1d45]">Website profile</h2>
             <p className="mt-1 text-xs text-slate-500">Update the logo, store contact details and social links shown publicly.</p>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <label className="text-sm font-semibold text-slate-700">Logo URL<input value={logoUrl} onChange={(event) => setLogoUrl(event.target.value)} placeholder="/logo-web.png or image URL" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /><span className="mt-2 flex items-center gap-3"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadLogo(file); }} className="block w-full rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-normal text-slate-500" /><span className="shrink-0 text-xs text-slate-400">{uploadingLogo ? "Uploading..." : "Max 5MB"}</span></span>{logoUrl && <img src={logoUrl} alt="Logo preview" className="mt-3 h-14 w-32 rounded-lg border border-slate-200 bg-slate-50 object-contain p-2" />}</label>
+              <label className="text-sm font-semibold text-slate-700">Logo URL<input value={logoUrl} onChange={(event) => setLogoUrl(event.target.value)} placeholder="/logo-web.webp or image URL" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /><span className="mt-2 flex items-center gap-3"><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadLogo(file); }} className="block w-full rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-normal text-slate-500" /><span className="shrink-0 text-xs text-slate-400">{uploadingLogo ? "Uploading..." : "Max 5MB"}</span></span>{logoUrl && <img src={logoUrl} alt="Logo preview" className="mt-3 h-14 w-32 rounded-lg border border-slate-200 bg-slate-50 object-contain p-2" />}</label>
               <label className="text-sm font-semibold text-slate-700">Store address<input value={storeAddress} onChange={(event) => setStoreAddress(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
               <label className="text-sm font-semibold text-slate-700">Phone<input value={storePhone} onChange={(event) => setStorePhone(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
               <label className="text-sm font-semibold text-slate-700">Email<input type="email" value={storeEmail} onChange={(event) => setStoreEmail(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
@@ -139,7 +139,7 @@ export default function AdminSettingsPage() {
               <label className="text-sm font-semibold text-slate-700">Story heading<input value={aboutStoryTitle} onChange={(event) => setAboutStoryTitle(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
               <label className="text-sm font-semibold text-slate-700">First paragraph<textarea value={aboutStoryText} onChange={(event) => setAboutStoryText(event.target.value)} rows={4} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
               <label className="text-sm font-semibold text-slate-700">Second paragraph<textarea value={aboutStorySecondText} onChange={(event) => setAboutStorySecondText(event.target.value)} rows={3} className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
-              <label className="text-sm font-semibold text-slate-700">Story image URL<input value={aboutStoryImage} onChange={(event) => setAboutStoryImage(event.target.value)} placeholder="/about.png or image URL" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+              <label className="text-sm font-semibold text-slate-700">Story image URL<input value={aboutStoryImage} onChange={(event) => setAboutStoryImage(event.target.value)} placeholder="/about.webp or image URL" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
             </div>
           </section>
 

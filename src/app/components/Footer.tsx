@@ -79,7 +79,7 @@ function TikTokIcon({ size = 16, strokeWidth = 1.75 }) {
 }
 
 export default function Footer() {
-  const [site, setSite] = useState({ logoUrl: "/logo-web.png", storeAddress: "hala, sindh, Pakistan", storePhone: "+92 304 1298136", storeEmail: "rumanshakee56@gmail.com", facebookUrl: "https://www.facebook.com/share/1DfNAzWgrU/", instagramUrl: "https://www.instagram.com/ruman_mart", tiktokUrl: "https://www.tiktok.com/@ruman.ali0304", whatsappUrl: "" });
+  const [site, setSite] = useState({ logoUrl: "/logo-web.webp", storeAddress: "hala, sindh, Pakistan", storePhone: "+92 304 1298136", storeEmail: "rumanshakee56@gmail.com", facebookUrl: "https://www.facebook.com/share/1DfNAzWgrU/", instagramUrl: "https://www.instagram.com/ruman_mart", tiktokUrl: "https://www.tiktok.com/@ruman.ali0304", whatsappUrl: "" });
   useEffect(() => { void fetch("/api/settings/shipping").then(async (response) => { if (response.ok) { const settings = await response.json(); setSite((current) => ({ ...current, ...settings })); } }).catch(() => undefined); }, []);
   const dynamicSocials = socials.map((social) => ({ ...social, href: social.label === "Facebook" ? site.facebookUrl : social.label === "Instagram" ? site.instagramUrl : site.tiktokUrl })).filter((social) => social.href);
   return (

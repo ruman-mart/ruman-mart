@@ -23,13 +23,13 @@ type Props = {
 export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect }: Props) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
-  const [logoUrl, setLogoUrl] = useState("/logo-web.png");
+  const [logoUrl, setLogoUrl] = useState("/logo-web.webp");
 
   useEffect(() => {
     void fetch("/api/settings/shipping", { cache: "no-store" })
       .then(async (response) => response.ok ? await response.json() as { logoUrl?: string } : null)
-      .then((settings) => setLogoUrl(settings?.logoUrl || "/logo-web.png"))
-      .catch(() => setLogoUrl("/logo-web.png"));
+      .then((settings) => setLogoUrl(settings?.logoUrl || "/logo-web.webp"))
+      .catch(() => setLogoUrl("/logo-web.webp"));
   }, []);
 
   async function handleLogout() {
@@ -48,7 +48,7 @@ export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect
         <div className="relative z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/10 px-3 py-3">
           <Link href="/admin" onClick={onClose} className="flex items-center gap-2.5">
             <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/20 bg-white/15 text-sm font-black text-white shadow-lg">
-              <img src={logoUrl} alt="Ruman Mart logo" onError={() => setLogoUrl("/logo-web.png")} className="h-full w-full object-contain p-1" />
+              <img src={logoUrl} alt="Ruman Mart logo" onError={() => setLogoUrl("/logo-web.webp")} className="h-full w-full object-contain p-1" />
             </span>
             <span><span className="block text-base font-bold tracking-tight">Ruman<span className="text-[#7deaff]">Mart</span></span><span className="mt-0.5 block text-[9px] font-bold uppercase tracking-[0.2em] text-white/45">Admin Console</span></span>
           </Link>

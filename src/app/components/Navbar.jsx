@@ -60,12 +60,12 @@ export default function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
-  const [logoUrl, setLogoUrl] = useState("/logo-web.png");
+  const [logoUrl, setLogoUrl] = useState("/logo-web.webp");
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     void fetch("/api/settings/shipping").then(async (response) => {
-      if (response.ok) setLogoUrl((await response.json()).logoUrl || "/logo-web.png");
+      if (response.ok) setLogoUrl((await response.json()).logoUrl || "/logo-web.webp");
     }).catch(() => undefined);
   }, []);
 

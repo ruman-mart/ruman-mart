@@ -38,13 +38,13 @@ export const metadata: Metadata = {
     siteName: "Ruman Mart",
     title: "Ruman Mart | Quality Products at Great Prices",
     description: "Discover quality products, exclusive deals and reliable delivery across Pakistan.",
-    images: [{ url: "/hero.png", width: 1200, height: 630, alt: "Ruman Mart online store" }],
+    images: [{ url: "/hero.webp", width: 1200, height: 630, alt: "Ruman Mart online store" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ruman Mart | Quality Products at Great Prices",
     description: "Shop quality products and exclusive deals from Ruman Mart.",
-    images: ["/hero.png"],
+    images: ["/hero.webp"],
   },
   robots: { index: true, follow: true },
 };
