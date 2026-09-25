@@ -41,5 +41,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Keep static sitemap entries available if the database is temporarily unavailable.
   }
 
-  return entries;
+  return Array.from(new Map(entries.map((entry) => [entry.url, entry])).values());
 }
