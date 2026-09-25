@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Home as HomeIcon, ShoppingCart, Star } from "lucide-react";
+import { ArrowRight, ChevronRight, Home as HomeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import WishlistButton from "../components/WishlistButton";
@@ -31,17 +31,7 @@ function formatPrice(price: number) {
   return `Rs. ${price.toLocaleString("en-PK")}`;
 }
 
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <Star key={index} size={12} className={index < Math.round(rating) ? "fill-[#f5a623] text-[#f5a623]" : "fill-slate-200 text-slate-200"} />
-      ))}
-    </div>
-  );
-}
-
-export default async function DealsPage() {
+export default async function DealsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   let landingDeals: Deal[] = [];
   try {
     const databaseDeals = (await ProductModel.findAll({ where: { isActive: true, isDeal: true }, include: [{ association: "category", attributes: ["slug"] }], order: [["createdAt", "DESC"]], raw: true, nest: true })) as unknown as Array<{ name: string; brand: string; price: number; originalPrice: number; rating: number | string; reviews: number; image: string; category?: { slug: string } }>;
@@ -49,6 +39,14 @@ export default async function DealsPage() {
   } catch (error) {
     console.error("Deals could not load:", error);
   }
+  const pageSize = 12;
+  const totalPages = Math.max(1, Math.ceil(landingDeals.length / pageSize));
+  const requestedPage = Number.parseInt((await searchParams).page ?? "1", 10);
+  const currentPage = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), totalPages) : 1;
+  const visibleDeals = landingDeals.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageNumbers = totalPages <= 7
+    ? Array.from({ length: totalPages }, (_, index) => index + 1)
+    : Array.from(new Set([1, currentPage - 1, currentPage, currentPage + 1, totalPages])).filter((page) => page > 0 && page <= totalPages).sort((a, b) => a - b);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7fb] text-slate-800">
@@ -242,75 +240,58 @@ export default async function DealsPage() {
 
   {landingDeals.length === 0 && <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><h3 className="text-lg font-bold text-[#0b1d45]">No deals available right now</h3><p className="mt-2 text-sm text-slate-500">New offers will appear here when products are marked as deals.</p></div>}
 
-  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-    {landingDeals.map((deal, index) => (
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    {visibleDeals.map((deal) => (
       <article
         key={deal.name}
-        className="deal-card anim-fade-up group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(11,29,69,0.06)] transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-8px_rgba(244,63,94,0.22)]"
-        style={{ animationDelay: `${Math.min(index * 60, 400)}ms` }}
+        className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
       >
-        {/* Shine sweep on hover */}
-        <span className="deal-card-shine" aria-hidden="true" />
-
         {/* Product Image */}
-        <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
+        <div className="relative flex h-40 items-center justify-center bg-white px-4 pt-4">
           <WishlistButton product={deal} />
 
-         <span className="deal-card-badge absolute right-2 top-2 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
-  -{deal.discount}%
-</span>
+          <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
+            -{deal.discount}%
+          </span>
 
           <img
             src={deal.image}
             alt={deal.name}
-            className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
-          />
-
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            aria-hidden="true"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>
 
         {/* Product Info */}
-        <div className="flex flex-1 flex-col gap-1 border-t border-slate-100 p-3">
-          <p className="text-[11px] font-semibold text-[#0b75a5]">
-            {deal.brand}
-          </p>
-
-          <h3 className="truncate text-sm font-bold text-[#0b1d45] transition-colors group-hover:text-[#0b75a5]">
+        <div className="flex flex-1 flex-col gap-1 px-4 pb-4 pt-3">
+          <h3 className="truncate text-sm font-bold text-[#0b1d45]">
             {deal.name}
           </h3>
-
-          <div className="flex items-center gap-1">
-            <StarRating rating={deal.rating} />
-
-            <span className="text-[10px] text-slate-400">
-              ({deal.reviews.toLocaleString()})
-            </span>
-          </div>
-
-          <div className="mt-auto flex flex-wrap items-baseline gap-1.5 pt-2">
-            <span className="text-sm font-bold text-[#0b1d45]">
+          <p className="text-xs text-slate-500">{deal.brand}</p>
+          <div className="mt-1 flex items-baseline gap-2">
+            <span className="text-base font-bold text-[#0b1d45]">
               {formatPrice(deal.price)}
             </span>
-
-            <span className="text-[10px] text-slate-400 line-through">
+            <span className="text-xs text-slate-400 line-through">
               {formatPrice(deal.originalPrice)}
             </span>
           </div>
 
           <Link
             href={`/categories/${deal.categorySlug ?? "electronics"}/${slugify(deal.name)}`}
-            className="mt-2 inline-flex items-center justify-center gap-1 rounded-lg bg-[#0b1d45] py-2 text-xs font-semibold text-white transition-all duration-300 group-hover:bg-gradient-to-r group-hover:from-rose-500 group-hover:to-[#0b75a5] group-hover:shadow-md group-hover:shadow-rose-500/30"
+            className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
           >
-            <ShoppingCart size={13} aria-hidden="true" />
-            View Details
+            View Product
+            <ArrowRight size={14} aria-hidden="true" />
           </Link>
         </div>
       </article>
     ))}
   </div>
+  {totalPages > 1 && <nav aria-label="Deals pagination" className="mt-8 flex flex-wrap items-center justify-center gap-1.5">
+    <Link href={`/deals?page=${Math.max(1, currentPage - 1)}`} aria-label="Previous deals page" className={`flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white ${currentPage === 1 ? "pointer-events-none text-slate-300" : "text-slate-500 hover:bg-slate-50"}`}><ChevronRight size={16} className="rotate-180" aria-hidden="true" /></Link>
+    {pageNumbers.map((page, index) => <span key={page} className="flex items-center gap-1.5">{index > 0 && page - pageNumbers[index - 1] > 1 && <span className="px-1 text-sm text-slate-400">...</span>}<Link href={`/deals?page=${page}`} className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold ${page === currentPage ? "bg-[#19c9ee] text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}>{page}</Link></span>)}
+    <Link href={`/deals?page=${Math.min(totalPages, currentPage + 1)}`} aria-label="Next deals page" className={`flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white ${currentPage === totalPages ? "pointer-events-none text-slate-300" : "text-slate-500 hover:bg-slate-50"}`}><ChevronRight size={16} aria-hidden="true" /></Link>
+  </nav>}
 </section>
       </main>
       <Footer />

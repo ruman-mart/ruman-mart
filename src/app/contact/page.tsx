@@ -22,6 +22,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const STORE_ADDRESS = "RC7C+294 Shakeel General Store, Misri St, Hala, Pakistan";
+const STORE_EMBED_URL = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3591.7369849316724!2d68.41782047485763!3d25.81224980651555!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x394b974047f2da73%3A0xfa231510cbfb77ea!2sRuman%20Mart!5e0!3m2!1sen!2s!4v1790365041555!5m2!1sen!2s";
+const STORE_MAP_URL = "https://www.google.com/maps/dir//Ruman+Mart,+Tariq+Rd,+near+Shareef+Decoration,+Hala,+70120,+Pakistan/@25.798964,68.4173972,13z/data=!4m8!4m7!1m0!1m5!1m1!1s0x394b974047f2da73:0xfa231510cbfb77ea!2m2!1d68.4203954!2d25.812245?entry=ttu&g_ep=EgoyMDI2MDkyMi4wIKXMDSoASAFQAw%3D%3D";
 
 const contactInfo: {
   Icon: LucideIcon;
@@ -422,7 +424,7 @@ export default function ContactPage() {
               <div className="relative h-64 overflow-hidden rounded-xl border border-slate-200 sm:h-80">
                 <iframe
                   title="Ruman Mart location"
-                  src={`https://www.google.com/maps?q=${encodeURIComponent(site.storeAddress)}&output=embed`}
+                  src={STORE_EMBED_URL}
                   className="h-full w-full border-0"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
@@ -445,7 +447,7 @@ export default function ContactPage() {
                   experience. Our team is always happy to help!
                 </p>
                 <Link
-                  href={`https://www.google.com/maps?q=${encodeURIComponent(site.storeAddress)}`}
+                  href={STORE_MAP_URL}
                   target="_blank"
                   className="group mt-1 inline-flex items-center gap-2 rounded-lg border-2 border-[#19c9ee] px-5 py-2.5 text-sm font-semibold text-[#0b75a5] transition-all duration-300 hover:bg-[#e6f7fc] hover:shadow-md"
                 >

@@ -5,9 +5,9 @@ export const metadata: Metadata = {
   title: "Ruman Mart Admin",
   description: "Ruman Mart store administration console.",
   icons: {
-    icon: [{ url: "/favicon.svg?v=1", type: "image/svg+xml" }],
-    shortcut: ["/favicon.svg?v=1"],
-    apple: ["/favicon.svg?v=1"],
+    icon: [{ url: "/favicon.jpeg", type: "image/jpeg" }],
+    shortcut: ["/favicon.jpeg"],
+    apple: ["/favicon.jpeg"],
   },
 };
 

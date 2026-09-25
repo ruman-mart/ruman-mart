@@ -191,6 +191,7 @@ export default function Navbar() {
     width={120}
     height={68}
     priority
+    onError={() => setLogoUrl("/logo-web.webp")}
     className="h-[44px] w-auto object-contain md:h-[52px]"
   />
 </Link>
