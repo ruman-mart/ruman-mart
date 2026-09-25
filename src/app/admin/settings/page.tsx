@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Loader2, Save, Settings2, Upload, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Save, Settings2, Upload, UserRound, X } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
 
@@ -19,6 +19,11 @@ const regions = [
 const defaultRates = { punjab: 250, sindh: 200, "khyber-pakhtunkhwa": 300, balochistan: 350, islamabad: 250, "azad-kashmir": 350, "gilgit-baltistan": 450 };
 
 export default function AdminSettingsPage() {
+  const [adminName, setAdminName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [accountMessage, setAccountMessage] = useState("");
+  const [accountSaving, setAccountSaving] = useState(false);
   const [rates, setRates] = useState<Record<string, number>>(defaultRates);
   const [advanceShipping, setAdvanceShipping] = useState(false);
   const [advanceAccountNumber, setAdvanceAccountNumber] = useState("");
@@ -43,6 +48,11 @@ export default function AdminSettingsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    void fetch("/api/auth/profile", { cache: "no-store" })
+      .then(async (response) => response.ok ? await response.json() as { fullName: string } : null)
+      .then((profile) => { if (profile) setAdminName(profile.fullName); })
+      .catch(() => undefined);
+
     void fetch("/api/settings/shipping")
       .then(async (response) => response.ok ? await response.json() as { rates: Record<string, number>; advanceShipping: boolean; advanceAccountNumber: string; advanceAccountTitle: string; advanceAccountName: string; logoUrl: string; storeAddress: string; storePhone: string; storeEmail: string; facebookUrl: string; instagramUrl: string; tiktokUrl: string; whatsappUrl: string; aboutStoryTitle: string; aboutStoryText: string; aboutStorySecondText: string; aboutStoryImage: string } : null)
       .then((settings) => {
@@ -57,6 +67,27 @@ export default function AdminSettingsPage() {
       })
       .catch(() => undefined);
   }, []);
+
+  async function saveAccount() {
+    if (accountSaving) return;
+    setAccountSaving(true);
+    setAccountMessage("");
+    const response = await fetch("/api/auth/profile", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName: adminName, currentPassword, newPassword }),
+    });
+    const result = await response.json().catch(() => ({})) as { message?: string; fullName?: string };
+    if (response.ok) {
+      setAdminName(result.fullName ?? adminName.trim());
+      setCurrentPassword("");
+      setNewPassword("");
+      setAccountMessage("Admin account updated successfully.");
+    } else {
+      setAccountMessage(result.message ?? "Unable to update admin account.");
+    }
+    setAccountSaving(false);
+  }
 
   async function saveSettings() {
     if (saving) return;
@@ -103,6 +134,16 @@ export default function AdminSettingsPage() {
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0b75a5]">Store configuration</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#0b1d45]">Settings</h1>
           <p className="mt-2 text-sm text-slate-500">Manage checkout shipping charges and payment options.</p>
+
+          <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f7fc] text-[#0b75a5]"><UserRound size={19} /></span><div><h2 className="font-bold text-[#0b1d45]">Admin account</h2><p className="mt-1 text-xs text-slate-500">Update your name or change your password.</p></div></div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <label className="text-sm font-semibold text-slate-700">Admin name<input value={adminName} onChange={(event) => setAdminName(event.target.value)} placeholder="Enter admin name" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+              <label className="text-sm font-semibold text-slate-700">Current password<input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="Required for password change" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+              <label className="text-sm font-semibold text-slate-700">New password<input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Leave blank to keep it" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
+            </div>
+            <div className="mt-4 flex items-center justify-end gap-3"><p className={`mr-auto text-sm ${accountMessage.includes("successfully") ? "text-emerald-600" : "text-rose-600"}`}>{accountMessage}</p><button type="button" disabled={accountSaving} onClick={() => void saveAccount()} className="inline-flex items-center gap-2 rounded-lg bg-[#0b1d45] px-5 py-3 text-sm font-bold text-white hover:bg-[#102d62] disabled:cursor-wait disabled:opacity-60">{accountSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />} {accountSaving ? "Saving..." : "Save account"}</button></div>
+          </section>
 
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f7fc] text-[#0b75a5]"><Settings2 size={19} /></span><div><h2 className="font-bold text-[#0b1d45]">Shipping charges</h2><p className="mt-1 text-xs text-slate-500">Rates are applied to checkout by selected province.</p></div></div>

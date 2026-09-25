@@ -55,7 +55,7 @@ export default function LoginPage() {
             {message && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p>}
             <button type="submit" disabled={submitting} className="h-12 w-full rounded-xl bg-[#0b1d45] text-sm font-bold text-white shadow-lg shadow-[#0b1d45]/15 transition-colors hover:bg-[#102d62] disabled:cursor-not-allowed disabled:opacity-60">{submitting ? "Signing in..." : "Sign in"}</button>
           </form>
-          <p className="mt-8 text-center text-sm text-slate-500">Don&apos;t have an account? <Link href="/register" className="font-bold text-[#0b75a5] hover:text-[#0b1d45]">Create one</Link></p>
+         
           <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-400"><LockKeyhole size={13} /> Secure and private checkout</div>
         </div>
       </section>
