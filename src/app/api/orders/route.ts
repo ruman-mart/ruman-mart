@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
 import sequelize from "@/lib/db";
 import { runMigrations } from "@/lib/migrations";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
 type OrderItem = {
   id: string;
@@ -17,7 +17,7 @@ type OrderItem = {
 };
 
 function authorizedUserId() {
-  return cookies().then((store) => store.get("ruman_session")?.value ?? null);
+  return getAuthenticatedUserId();
 }
 
 export async function GET() {
@@ -29,7 +29,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const customerId = await authorizedUserId();
-  if (!customerId) return NextResponse.json({ message: "Please sign in before placing an order." }, { status: 401 });
 
   try {
     await runMigrations();
@@ -50,14 +49,14 @@ export async function POST(request: Request) {
       paymentMethod?: string;
     };
 
-    if (!body.customerName || !body.phone || !body.email || !body.address || !body.province || !body.city || !body.postalCode || !body.items?.length) {
+    if (!body.customerName || !body.phone || !body.email || !body.address || !body.province || !body.city || !body.items?.length) {
       return NextResponse.json({ message: "Please complete your contact, shipping, and cart details." }, { status: 400 });
     }
     const customerName = body.customerName;
     const phone = body.phone;
     const email = body.email;
     const address = body.address;
-    const postalCode = body.postalCode;
+    const postalCode = body.postalCode?.trim() || null;
     const province = body.province;
     const city = body.city;
 
@@ -98,14 +97,14 @@ export async function POST(request: Request) {
 
       return Order.create({
       orderNumber: `RM-${Date.now().toString().slice(-8)}`,
-      customerId: Number(customerId),
+      customerId: customerId ? Number(customerId) : null,
       customerName: customerName.trim(),
       phone: phone.trim(),
       email: email.trim().toLowerCase(),
       address: address.trim(),
       province,
       city,
-      postalCode: postalCode.trim(),
+      postalCode,
       country: body.country ?? "Pakistan",
       items: JSON.stringify(items),
       subtotal,

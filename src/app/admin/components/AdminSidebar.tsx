@@ -6,11 +6,11 @@ import { ChevronDown, LayoutDashboard, Loader2, LogOut, Mail, PackageSearch, Set
 import { useEffect, useState } from "react";
 
 const navigation = [
-  { label: "Overview", icon: LayoutDashboard, href: "/admin" },
-  { label: "Categories", icon: Tags, href: "/admin/categories" },
-  { label: "Products", icon: PackageSearch, href: "/admin/products" },
-  { label: "Orders", icon: ShoppingCart, href: "/admin/orders" },
-  { label: "Inquiries", icon: Mail, href: "/admin/inquiries" },
+  { label: "Overview", icon: LayoutDashboard, href: "/ruman-admin-hub" },
+  { label: "Categories", icon: Tags, href: "/ruman-admin-hub/categories" },
+  { label: "Products", icon: PackageSearch, href: "/ruman-admin-hub/products" },
+  { label: "Orders", icon: ShoppingCart, href: "/ruman-admin-hub/orders" },
+  { label: "Inquiries", icon: Mail, href: "/ruman-admin-hub/inquiries" },
 ];
 
 type Props = {
@@ -25,6 +25,7 @@ export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoUrl, setLogoUrl] = useState("/logo-web.webp");
   const [adminName, setAdminName] = useState("Ruman Admin");
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
     void fetch("/api/settings/shipping", { cache: "no-store" })
@@ -32,8 +33,8 @@ export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect
       .then((settings) => setLogoUrl(settings?.logoUrl || "/logo-web.webp"))
       .catch(() => setLogoUrl("/logo-web.webp"));
     void fetch("/api/auth/profile", { cache: "no-store" })
-      .then(async (response) => response.ok ? await response.json() as { fullName?: string } : null)
-      .then((profile) => { if (profile?.fullName) setAdminName(profile.fullName); })
+      .then(async (response) => response.ok ? await response.json() as { fullName?: string; avatarUrl?: string } : null)
+      .then((profile) => { if (profile?.fullName) setAdminName(profile.fullName); setAvatarUrl(profile?.avatarUrl ?? ""); })
       .catch(() => undefined);
   }, []);
 
@@ -41,7 +42,7 @@ export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect
     if (loggingOut) return;
     setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
+    router.replace("/ruman-login-hub");
     router.refresh();
   }
 
@@ -51,7 +52,7 @@ export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect
       <aside className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col overflow-hidden px-3 py-4 text-white shadow-2xl shadow-slate-950/20 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`} style={{ background: "linear-gradient(160deg, #173d7a 0%, #071b3d 48%, #031126 100%)" }}>
         <div className="pointer-events-none absolute inset-0 opacity-[0.11]" style={{ backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(255,255,255,1) 24px, rgba(255,255,255,1) 25px), repeating-linear-gradient(90deg, transparent, transparent 24px, rgba(255,255,255,1) 24px, rgba(255,255,255,1) 25px)" }} />
         <div className="relative z-10 flex items-center justify-between rounded-2xl border border-white/10 bg-black/10 px-3 py-3">
-          <Link href="/admin" onClick={onClose} className="flex items-center gap-2.5">
+          <Link href="/ruman-admin-hub" onClick={onClose} className="flex items-center gap-2.5">
             <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl border border-white/20 bg-white/15 text-sm font-black text-white shadow-lg">
               <img src={logoUrl} alt="Ruman Mart logo" onError={() => setLogoUrl("/logo-web.webp")} className="h-full w-full object-contain p-1" />
             </span>
@@ -68,9 +69,9 @@ export default function AdminSidebar({ activeNav, sidebarOpen, onClose, onSelect
         </nav>
         <div className="relative z-10 mt-auto space-y-2 rounded-2xl border border-white/10 bg-black/10 p-2">
           <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Account</p>
-          <Link href="/admin/settings" onClick={() => { onSelect("Settings"); onClose(); }} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all ${activeNav === "Settings" ? "border-white/25 bg-white/20 text-white" : "border-transparent text-white/65 hover:bg-white/10 hover:text-white"}`}><Settings size={17} />Settings</Link>
+          <Link href="/ruman-admin-hub/settings" onClick={() => { onSelect("Settings"); onClose(); }} className={`flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all ${activeNav === "Settings" ? "border-white/25 bg-white/20 text-white" : "border-transparent text-white/65 hover:bg-white/10 hover:text-white"}`}><Settings size={17} />Settings</Link>
           <button disabled={loggingOut} onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-2.5 text-sm text-rose-100/80 transition-all hover:border-rose-300/20 hover:bg-rose-500/15 hover:text-rose-50 disabled:cursor-wait disabled:opacity-60">{loggingOut ? <Loader2 size={17} className="animate-spin" /> : <LogOut size={17} />}{loggingOut ? "Logging out..." : "Log out"}</button>
-          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/10 p-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f6c453] text-sm font-black text-[#071b3d]">RM</span><div className="min-w-0"><p className="truncate text-sm font-semibold text-white">{adminName}</p><p className="text-xs text-white/45">Super Admin</p></div><ChevronDown size={15} className="ml-auto text-white/35" /></div>
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/10 p-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f6c453] text-sm font-black text-[#071b3d]">{avatarUrl ? <img src={avatarUrl} alt="Admin profile" className="h-full w-full object-cover" /> : "RM"}</span><div className="min-w-0"><p className="truncate text-sm font-semibold text-white">{adminName}</p><p className="text-xs text-white/45">Super Admin</p></div><ChevronDown size={15} className="ml-auto text-white/35" /></div>
         </div>
       </aside>
     </>

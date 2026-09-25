@@ -21,6 +21,9 @@ const migration017 = require("../db/migrations/017-add-advance-account-name.cjs"
 const migration018 = require("../db/migrations/018-add-website-profile-settings.cjs");
 const migration019 = require("../db/migrations/019-create-inquiries.cjs");
 const migration020 = require("../db/migrations/020-add-about-story-settings.cjs");
+const migration021 = require("../db/migrations/021-make-postal-code-optional.cjs");
+const migration022 = require("../db/migrations/022-add-product-video-url.cjs");
+const migration023 = require("../db/migrations/023-add-user-avatar-url.cjs");
 
 const migrationFiles = [
   { ...migration001, name: "001-create-users.cjs" },
@@ -43,6 +46,9 @@ const migrationFiles = [
   { ...migration018, name: "018-add-website-profile-settings.cjs" },
   { ...migration019, name: "019-create-inquiries.cjs" },
   { ...migration020, name: "020-add-about-story-settings.cjs" },
+  { ...migration021, name: "021-make-postal-code-optional.cjs" },
+  { ...migration022, name: "022-add-product-video-url.cjs" },
+  { ...migration023, name: "023-add-user-avatar-url.cjs" },
 ];
 
 const migrator = new Umzug({

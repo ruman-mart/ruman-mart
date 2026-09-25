@@ -2,7 +2,6 @@ import {
   ArrowRight,
   ChevronRight,
   Headset,
-  RotateCcw,
   ShieldCheck,
   ShoppingCart,
   Star,
@@ -189,9 +188,9 @@ const trustBadges: TrustBadge[] = [
     subtitle: "100% secure checkout",
   },
   {
-    Icon: RotateCcw,
-    title: "Easy Returns",
-    subtitle: "Hassle free returns",
+    Icon: Award,
+    title: "Quality Products",
+    subtitle: "Carefully selected for you",
   },
   {
     Icon: Headset,
@@ -463,7 +462,7 @@ export default async function Home() {
                   key={product.name}
                   className="group flex min-w-[200px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"
                 >
-                  <div className="relative flex h-36 items-center justify-center bg-white px-4 pt-4">
+                  <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
                     <WishlistButton product={product} />
                     {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
                         -{product.discount}%
@@ -471,7 +470,7 @@ export default async function Home() {
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                     />
                   </div>
 

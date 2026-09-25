@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import Category from "@/lib/models/Category";
 import { runMigrations } from "@/lib/migrations";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 async function requireAdmin() {
-  return Boolean((await cookies()).get("ruman_session")?.value);
+  return Boolean(await getAuthenticatedUserId());
 }
 
 export async function GET() {

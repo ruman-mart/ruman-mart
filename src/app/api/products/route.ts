@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
 import { runMigrations } from "@/lib/migrations";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
 function slugify(value: string) { return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
-function authorized() { return cookies().then((store) => Boolean(store.get("ruman_session")?.value)); }
+function authorized() { return getAuthenticatedUserId().then(Boolean); }
 
 export async function GET() {
   await runMigrations();
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
       originalPrice?: number;
       image?: string;
       images?: string[];
+      videoUrl?: string;
       colors?: string[];
       storageOptions?: string[];
       quickSpecs?: Array<string | { label: string; sub?: string }>;
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       isDeal?: boolean;
     };
     if (!body.name || !body.brand || !body.categoryId || !body.price || !body.originalPrice) return NextResponse.json({ message: "Please complete all product fields." }, { status: 400 });
-    const product = await Product.create({ ...body, image: body.image ?? "", images: JSON.stringify(body.images ?? []), colors: JSON.stringify(body.colors ?? []), storageOptions: JSON.stringify(body.storageOptions ?? []), quickSpecs: JSON.stringify(body.quickSpecs ?? []), keyFeatures: JSON.stringify(body.keyFeatures ?? []), slug: slugify(body.slug || body.name) });
+    const product = await Product.create({ ...body, videoUrl: body.videoUrl?.trim() || null, image: body.image ?? "", images: JSON.stringify(body.images ?? []), colors: JSON.stringify(body.colors ?? []), storageOptions: JSON.stringify(body.storageOptions ?? []), quickSpecs: JSON.stringify(body.quickSpecs ?? []), keyFeatures: JSON.stringify(body.keyFeatures ?? []), slug: slugify(body.slug || body.name) });
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.name === "SequelizeUniqueConstraintError") return NextResponse.json({ message: "A product with this slug already exists." }, { status: 409 });

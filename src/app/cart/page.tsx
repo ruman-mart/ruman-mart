@@ -14,7 +14,7 @@ import {
   ArrowLeft,
   Truck,
   ShieldCheck,
-  RotateCcw,
+  Award,
   Headset,
   Info,
   type LucideIcon,
@@ -51,7 +51,7 @@ type RelatedProduct = {
 const trustBadges: { Icon: LucideIcon; title: string; subtitle: string }[] = [
   { Icon: Truck, title: "Nationwide Delivery", subtitle: "Rs. 200 - Rs. 250 shipping" },
   { Icon: ShieldCheck, title: "Secure Payments", subtitle: "100% secure checkout" },
-  { Icon: RotateCcw, title: "Easy Returns", subtitle: "Hassle free returns" },
+  { Icon: Award, title: "Quality Products", subtitle: "Carefully selected for you" },
   { Icon: Headset, title: "24/7 Support", subtitle: "We're here to help" },
 ];
 
@@ -392,7 +392,7 @@ export default function CartPage() {
                   key={item.name}
                   className="group flex min-w-[180px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"
                 >
-                  <Link href={`/categories/${item.categorySlug}/${item.slug}`} className="relative flex h-32 items-center justify-center bg-white px-3 pt-3">
+                  <Link href={`/categories/${item.categorySlug}/${item.slug}`} className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
                     {item.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white">
                         -{item.discount}%
                       </span>}

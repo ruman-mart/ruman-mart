@@ -368,9 +368,9 @@ export default function OrderDetailsPage() {
                     <p className="text-xs text-slate-500">Contact our support team for any questions.</p>
                   </div>
                 </div>
-                <button type="button" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-[#0b1d45] transition-colors hover:bg-slate-50">
+                <Link href="/contact" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-[#0b1d45] transition-colors hover:bg-slate-50">
                   Contact Support
-                </button>
+                </Link>
               </div>
             </div>
           </div>

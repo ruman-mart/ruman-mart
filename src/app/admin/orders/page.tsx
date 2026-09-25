@@ -113,7 +113,7 @@ export default function AdminOrdersPage() {
         <AdminHeader query={query} onQueryChange={setQuery} onOpenSidebar={() => setSidebarOpen(true)} />
         <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-8">
           <div className="mb-8">
-            <Link href="/admin" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0b75a5]">
+            <Link href="/ruman-admin-hub" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0b75a5]">
               <ArrowLeft size={15} /> Dashboard
             </Link>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0b75a5]">Order management</p>

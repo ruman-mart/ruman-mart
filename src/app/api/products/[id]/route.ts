@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Category";
 import { runMigrations } from "@/lib/migrations";
 import { deleteStoredImage } from "@/lib/storage";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
-async function authorized() { return Boolean((await cookies()).get("ruman_session")?.value); }
+async function authorized() { return Boolean(await getAuthenticatedUserId()); }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   await runMigrations();
@@ -29,6 +29,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     originalPrice?: number;
     image?: string;
     images?: string[] | string;
+    videoUrl?: string | null;
     colors?: string[] | string;
     storageOptions?: string[] | string;
     quickSpecs?: Array<string | { label: string; sub?: string }> | string;
@@ -47,6 +48,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     ...(body.price !== undefined ? { price: body.price } : {}),
     ...(body.originalPrice !== undefined ? { originalPrice: body.originalPrice } : {}),
     ...(body.image !== undefined ? { image: body.image } : {}),
+    ...(body.videoUrl !== undefined ? { videoUrl: body.videoUrl?.trim() || null } : {}),
     ...(body.inStock !== undefined ? { inStock: Boolean(body.inStock) } : {}),
     ...(body.stockQuantity !== undefined ? { stockQuantity: body.stockQuantity } : {}),
     ...(body.isFeatured !== undefined ? { isFeatured: Boolean(body.isFeatured) } : {}),

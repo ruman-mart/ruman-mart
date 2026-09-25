@@ -167,7 +167,7 @@ export default function AdminCategoriesPage() {
           <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <Link
-                href="/admin"
+                href="/ruman-admin-hub"
                 className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0b75a5]"
               >
                 <ArrowLeft size={15} /> Dashboard

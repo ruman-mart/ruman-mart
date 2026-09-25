@@ -411,10 +411,10 @@ export default function ProductsPage() {
   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 xl:grid-cols-4">
     {visibleProducts.map((product) => (
       <article key={product.id} className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-        <div className="relative flex h-40 items-center justify-center bg-white px-4 pt-4">
+        <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
           <WishlistButton product={product} />
           {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">-{product.discount}%</span>}
-          <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          <img src={product.image} alt={product.name} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105" />
         </div>
         <div className="flex flex-1 flex-col gap-1 px-4 pb-4 pt-3">
           <h3 className="truncate text-sm font-bold text-[#0b1d45]">{product.name}</h3>

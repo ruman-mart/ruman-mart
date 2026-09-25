@@ -380,12 +380,11 @@ export default function CheckoutPage() {
 
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-slate-600">
-                      Postal Code *
+                      Postal Code (optional)
                     </label>
                     <input
                       type="text"
                       name="postalCode"
-                      required
                       placeholder="54000"
                       className="w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm focus:border-[#19c9ee] focus:outline-none focus:ring-2 focus:ring-[#19c9ee]/30"
                     />

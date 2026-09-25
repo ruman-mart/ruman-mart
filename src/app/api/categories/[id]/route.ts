@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import Category from "@/lib/models/Category";
 import { runMigrations } from "@/lib/migrations";
 import { deleteStoredImage } from "@/lib/storage";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
 async function authorized() {
-  return Boolean((await cookies()).get("ruman_session")?.value);
+  return Boolean(await getAuthenticatedUserId());
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {

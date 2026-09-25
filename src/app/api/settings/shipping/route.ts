@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import ShippingSettings from "@/lib/models/ShippingSettings";
 import { runMigrations } from "@/lib/migrations";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
 const defaultRates = { punjab: 250, sindh: 200, "khyber-pakhtunkhwa": 300, balochistan: 350, islamabad: 250, "azad-kashmir": 350, "gilgit-baltistan": 450 };
 
@@ -17,7 +17,7 @@ function normalizeBoolean(value: unknown) {
 }
 
 function isAuthorized() {
-  return cookies().then((store) => Boolean(store.get("ruman_session")?.value));
+  return getAuthenticatedUserId().then(Boolean);
 }
 
 export async function GET() {

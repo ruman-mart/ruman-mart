@@ -24,7 +24,7 @@ export default function FloatingWhatsApp() {
     }).catch(() => undefined);
   }, []);
 
-  if (!url || pathname.startsWith("/admin")) return null;
+  if (!url || pathname.startsWith("/admin") || pathname.startsWith("/ruman-admin-hub")) return null;
 
   return (
     <a

@@ -18,10 +18,10 @@ export default function LoginPage() {
     setSubmitting(true);
     setMessage("");
     try {
-      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      const response = await fetch("/api/auth/rm-login-4k9p", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
       const result = (await response.json().catch(() => ({}))) as { message?: string };
       if (!response.ok) throw new Error(result.message ?? "Unable to sign in.");
-      router.push("/admin");
+      router.push("/ruman-admin-hub");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to sign in.");
     } finally {
@@ -55,7 +55,6 @@ export default function LoginPage() {
             {message && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p>}
             <button type="submit" disabled={submitting} className="h-12 w-full rounded-xl bg-[#0b1d45] text-sm font-bold text-white shadow-lg shadow-[#0b1d45]/15 transition-colors hover:bg-[#102d62] disabled:cursor-not-allowed disabled:opacity-60">{submitting ? "Signing in..." : "Sign in"}</button>
           </form>
-         
           <div className="mt-8 flex items-center justify-center gap-2 text-xs text-slate-400"><LockKeyhole size={13} /> Secure and private checkout</div>
         </div>
       </section>

@@ -13,7 +13,7 @@ const Order = sequelize.define(
     address: { type: DataTypes.STRING(255), allowNull: false },
     province: { type: DataTypes.STRING(80), allowNull: false },
     city: { type: DataTypes.STRING(100), allowNull: false },
-    postalCode: { type: DataTypes.STRING(20), allowNull: false, field: "postal_code" },
+    postalCode: { type: DataTypes.STRING(20), allowNull: true, field: "postal_code" },
     country: { type: DataTypes.STRING(80), allowNull: false, defaultValue: "Pakistan" },
     items: { type: DataTypes.TEXT, allowNull: false },
     subtotal: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },

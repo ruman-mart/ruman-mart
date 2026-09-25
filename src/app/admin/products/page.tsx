@@ -17,6 +17,7 @@ type Product = {
   price: number;
   originalPrice: number;
   image: string;
+  videoUrl?: string | null;
   description: string;
   colors: string;
   storageOptions: string;
@@ -38,6 +39,7 @@ type FormState = {
   price: string;
   originalPrice: string;
   image: string;
+  videoUrl: string;
   description: string;
   colors: string;
   storageOptions: string;
@@ -58,6 +60,7 @@ const emptyForm: FormState = {
   price: "",
   originalPrice: "",
   image: "",
+  videoUrl: "",
   description: "",
   colors: "",
   storageOptions: "",
@@ -93,6 +96,7 @@ export default function AdminProductsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
@@ -137,6 +141,7 @@ export default function AdminProductsPage() {
     setForm(emptyForm);
     setSlugEdited(false);
     setImageFiles([]);
+    setVideoFile(null);
     setImagePreviews([]);
     setMessage("");
     setStep(1);
@@ -152,6 +157,7 @@ export default function AdminProductsPage() {
       price: String(product.price),
       originalPrice: String(product.originalPrice),
       image: product.image,
+      videoUrl: product.videoUrl ?? "",
       description: product.description ?? "",
       colors: product.colors ? JSON.parse(product.colors).join(", ") : "",
       storageOptions: product.storageOptions ? JSON.parse(product.storageOptions).join(", ") : "",
@@ -165,6 +171,7 @@ export default function AdminProductsPage() {
     });
     setSlugEdited(true);
     setImageFiles([]);
+    setVideoFile(null);
     setImagePreviews(product.images ? JSON.parse(product.images) : [product.image]);
     setMessage("");
     setStep(1);
@@ -210,10 +217,20 @@ export default function AdminProductsPage() {
       uploadedImages.push(result.url);
     }
     if (uploadedImages.length) image = uploadedImages[0];
+    let videoUrl = form.videoUrl.trim();
+    if (videoFile) {
+      const data = new FormData();
+      data.append("file", videoFile);
+      const upload = await fetch("/api/uploads", { method: "POST", body: data });
+      const result = (await upload.json().catch(() => ({}))) as { url?: string; message?: string };
+      if (!upload.ok || !result.url) { setMessage(result.message ?? "Unable to upload video."); setSaving(false); return; }
+      videoUrl = result.url;
+    }
     const payload = {
       ...form,
       image,
       images: uploadedImages.length ? uploadedImages : (form.image ? [form.image] : []),
+      videoUrl,
       colors: form.colors.split(",").map((value) => value.trim()).filter(Boolean),
       storageOptions: form.storageOptions.split(",").map((value) => value.trim()).filter(Boolean),
       quickSpecs: form.quickSpecs.split(",").map((value) => value.trim()).filter(Boolean),
@@ -279,7 +296,7 @@ export default function AdminProductsPage() {
           <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <Link
-                href="/admin"
+                href="/ruman-admin-hub"
                 className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0b75a5]"
               >
                 <ArrowLeft size={15} /> Dashboard
@@ -592,6 +609,24 @@ export default function AdminProductsPage() {
                           ))}
                         </div>
                       )}
+                    </label>
+                    <label className="text-sm font-semibold text-slate-700 sm:col-span-2">
+                      Product video <span className="font-normal text-slate-400">(optional)</span>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm"
+                        onChange={(event) => setVideoFile(event.target.files?.[0] ?? null)}
+                        className="mt-2 block w-full rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm font-normal text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-[#e6f7fc] file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-[#0b75a5]"
+                      />
+                      <input
+                        type="url"
+                        value={form.videoUrl}
+                        onChange={(event) => updateField("videoUrl", event.target.value)}
+                        placeholder="Or paste a direct MP4/WebM video URL"
+                        className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none transition-colors focus:border-[#1fb6e6] focus:ring-2 focus:ring-[#1fb6e6]/20"
+                      />
+                      <span className="mt-1 block text-xs font-normal text-slate-400">Upload MP4/WebM up to 50MB, or paste a direct video URL.</span>
+                      {form.videoUrl && !videoFile && <span className="mt-1 block truncate text-xs font-normal text-emerald-600">Existing video saved</span>}
                     </label>
                   </>
                 )}

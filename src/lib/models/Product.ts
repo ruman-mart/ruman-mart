@@ -14,6 +14,7 @@ const Product = sequelize.define(
     originalPrice: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, field: "original_price" },
     image: { type: DataTypes.STRING(500), allowNull: false },
     images: { type: DataTypes.TEXT, allowNull: true },
+    videoUrl: { type: DataTypes.STRING(500), allowNull: true, field: "video_url" },
     rating: { type: DataTypes.DECIMAL(2, 1), allowNull: false, defaultValue: 0 },
     reviews: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false, defaultValue: 0 },
     isActive: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true, field: "is_active" },

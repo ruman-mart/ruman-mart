@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import Inquiry from "@/lib/models/Inquiry";
 import { runMigrations } from "@/lib/migrations";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  if (!(await cookies()).get("ruman_session")?.value) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!(await getAuthenticatedUserId())) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   try {
     await runMigrations();
     const inquiries = await Inquiry.findAll({ order: [["createdAt", "DESC"]], raw: true });
@@ -37,7 +37,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  if (!(await cookies()).get("ruman_session")?.value) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!(await getAuthenticatedUserId())) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   try {
     await runMigrations();
     const body = await request.json() as { id?: number; status?: "New" | "Read" | "Resolved" };
@@ -53,7 +53,7 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  if (!(await cookies()).get("ruman_session")?.value) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!(await getAuthenticatedUserId())) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   try {
     await runMigrations();
     const body = await request.json() as { id?: number };

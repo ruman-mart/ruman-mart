@@ -10,8 +10,8 @@ import {
   Star,
   Truck,
   ShieldCheck,
+  Award,
   Headset,
-  RotateCcw,
   ShoppingCart,
   Zap,
   Heart,
@@ -56,6 +56,7 @@ type ProductData = {
   description: string;
   keyFeatures: string[];
   stockQuantity: number;
+  videoUrl?: string | null;
 };
 
 type StoredCartItem = {
@@ -114,8 +115,8 @@ const fallbackProduct: ProductData = {
 const trustIcons: { Icon: LucideIcon; title: string; text: string }[] = [
   { Icon: Truck, title: "Fast Delivery", text: "Quick delivery to your doorstep" },
   { Icon: ShieldCheck, title: "Secure Payments", text: "100% secure checkout" },
+  { Icon: Award, title: "Quality Products", text: "Carefully selected for you" },
   { Icon: Headset, title: "24/7 Support", text: "We're here to help" },
-  { Icon: RotateCcw, title: "Easy Returns", text: "Hassle free returns" },
 ];
 
 function formatPrice(price: number) {
@@ -274,6 +275,7 @@ export default function ProductDetailsPage() {
         reviews: number;
         image: string;
         images?: string | string[];
+        videoUrl?: string | null;
         colors?: string | string[];
         storageOptions?: string | string[];
         quickSpecs?: string | Array<string | QuickSpec>;
@@ -302,6 +304,7 @@ export default function ProductDetailsPage() {
         description: data.description || fallbackProduct.description,
         keyFeatures: parseJsonArray<string>(data.keyFeatures, fallbackProduct.keyFeatures),
         stockQuantity: Number(data.stockQuantity ?? product?.stockQuantity ?? fallbackProduct.stockQuantity ?? 0),
+        videoUrl: data.videoUrl?.trim() || null,
       };
 
       setProduct(normalizedProduct);
@@ -362,6 +365,27 @@ export default function ProductDetailsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f7fb] text-slate-800">
       <Navbar />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            brand: { "@type": "Brand", name: product.brand },
+            image: product.images,
+            description: product.description,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "PKR",
+              price: product.price,
+              availability: product.inStock && product.stockQuantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.rumanmart.com"}/categories/${params.slug}/${params.product}`,
+            },
+            ...(product.reviews > 0 ? { aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.reviews } } : {}),
+          }),
+        }}
+      />
 
       <main className="flex-1">
         <div className="mx-auto max-w-[1800px] px-4 py-5 md:px-8">
@@ -419,6 +443,13 @@ export default function ProductDetailsPage() {
                   className="h-full w-full object-cover p-2 sm:p-3"
                 />
               </div>
+              {product.videoUrl && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-black">
+                  <video controls preload="metadata" className="h-auto max-h-[360px] w-full" src={product.videoUrl}>
+                    Your browser does not support video playback.
+                  </video>
+                </div>
+              )}
             </div>
 
             {/* Info */}

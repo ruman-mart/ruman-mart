@@ -253,7 +253,7 @@ export default async function DealsPage() {
         <span className="deal-card-shine" aria-hidden="true" />
 
         {/* Product Image */}
-        <div className="relative flex h-44 items-center justify-center bg-white p-3 sm:h-36">
+        <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
           <WishlistButton product={deal} />
 
          <span className="deal-card-badge absolute right-2 top-2 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
@@ -263,7 +263,7 @@ export default async function DealsPage() {
           <img
             src={deal.image}
             alt={deal.name}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+            className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
           />
 
           <div

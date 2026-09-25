@@ -251,7 +251,7 @@ export default async function NewArrivalsPage() {
         <span className="prod-card-shine" aria-hidden="true" />
 
         {/* Product Image */}
-        <div className="relative flex h-44 items-center justify-center bg-white p-3 sm:h-36">
+        <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
           <WishlistButton product={product} />
 
           <span className="prod-card-badge absolute right-2 top-2 rounded-full bg-gradient-to-r from-[#19c9ee] to-[#0b75a5] px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
@@ -261,7 +261,7 @@ export default async function NewArrivalsPage() {
           <img
             src={product.image}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+            className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-110"
           />
 
           <div

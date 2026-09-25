@@ -34,6 +34,7 @@ export default function AdminHeader({ query, onQueryChange, onOpenSidebar, searc
   const [orders, setOrders] = useState<NotificationOrder[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [greeting, setGreeting] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,6 +43,13 @@ export default function AdminHeader({ query, onQueryChange, onOpenSidebar, searc
     const interval = window.setInterval(updateGreeting, 60_000);
 
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/auth/profile", { cache: "no-store" })
+      .then(async (response) => response.ok ? await response.json() as { avatarUrl?: string } : null)
+      .then((profile) => setAvatarUrl(profile?.avatarUrl ?? ""))
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -127,7 +135,7 @@ export default function AdminHeader({ query, onQueryChange, onOpenSidebar, searc
             )}
           </div>
           <span className="hidden h-8 w-px bg-slate-200 sm:block" />
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0b75a5] text-xs font-bold text-white">RM</div>
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-[#0b75a5] text-xs font-bold text-white">{avatarUrl ? <img src={avatarUrl} alt="Admin profile" className="h-full w-full object-cover" /> : "RM"}</div>
         </div>
       </div>
     </header>

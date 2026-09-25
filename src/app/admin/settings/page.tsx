@@ -20,6 +20,7 @@ const defaultRates = { punjab: 250, sindh: 200, "khyber-pakhtunkhwa": 300, baloc
 
 export default function AdminSettingsPage() {
   const [adminName, setAdminName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [accountMessage, setAccountMessage] = useState("");
@@ -44,13 +45,14 @@ export default function AdminSettingsPage() {
   const [message, setMessage] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     void fetch("/api/auth/profile", { cache: "no-store" })
-      .then(async (response) => response.ok ? await response.json() as { fullName: string } : null)
-      .then((profile) => { if (profile) setAdminName(profile.fullName); })
+        .then(async (response) => response.ok ? await response.json() as { fullName: string; avatarUrl?: string } : null)
+      .then((profile) => { if (profile) { setAdminName(profile.fullName); setAvatarUrl(profile.avatarUrl ?? ""); } })
       .catch(() => undefined);
 
     void fetch("/api/settings/shipping")
@@ -75,7 +77,7 @@ export default function AdminSettingsPage() {
     const response = await fetch("/api/auth/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName: adminName, currentPassword, newPassword }),
+      body: JSON.stringify({ fullName: adminName, avatarUrl, currentPassword, newPassword }),
     });
     const result = await response.json().catch(() => ({})) as { message?: string; fullName?: string };
     if (response.ok) {
@@ -124,13 +126,29 @@ export default function AdminSettingsPage() {
     setUploadingLogo(false);
   }
 
+  async function uploadAvatar(file: File) {
+    if (uploadingAvatar) return;
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch("/api/uploads", { method: "POST", body: formData });
+    const result = await response.json().catch(() => ({})) as { url?: string; message?: string };
+    if (response.ok && result.url) {
+      setAvatarUrl(result.url);
+      setAccountMessage("Profile picture uploaded. Click Save account to apply it.");
+    } else {
+      setAccountMessage(result.message ?? "Unable to upload profile picture.");
+    }
+    setUploadingAvatar(false);
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-800">
       <div className="lg:pl-[260px]">
         <AdminSidebar activeNav="Settings" sidebarOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} onSelect={() => undefined} />
         <AdminHeader query="" onQueryChange={() => undefined} onOpenSidebar={() => setSidebarOpen(true)} />
         <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-7 lg:px-9 lg:py-8">
-          <Link href="/admin" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0b75a5]"><ArrowLeft size={15} /> Dashboard</Link>
+          <Link href="/ruman-admin-hub" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-[#0b75a5]"><ArrowLeft size={15} /> Dashboard</Link>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#0b75a5]">Store configuration</p>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-[#0b1d45]">Settings</h1>
           <p className="mt-2 text-sm text-slate-500">Manage checkout shipping charges and payment options.</p>
@@ -138,6 +156,7 @@ export default function AdminSettingsPage() {
           <section className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-5"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6f7fc] text-[#0b75a5]"><UserRound size={19} /></span><div><h2 className="font-bold text-[#0b1d45]">Admin account</h2><p className="mt-1 text-xs text-slate-500">Update your name or change your password.</p></div></div>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <label className="text-sm font-semibold text-slate-700">Profile picture<span className="mt-2 flex items-center gap-3"><span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#e6f7fc] text-sm font-bold text-[#0b75a5]">{avatarUrl ? <img src={avatarUrl} alt="Profile preview" className="h-full w-full object-cover" /> : "RM"}</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadAvatar(file); }} className="block min-w-0 flex-1 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2 text-xs font-normal text-slate-500" /></span><span className="mt-1 block text-xs font-normal text-slate-400">{uploadingAvatar ? "Uploading..." : "JPG, PNG, WebP or GIF. Max 5MB."}</span></label>
               <label className="text-sm font-semibold text-slate-700">Admin name<input value={adminName} onChange={(event) => setAdminName(event.target.value)} placeholder="Enter admin name" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
               <label className="text-sm font-semibold text-slate-700">Current password<input type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="Required for password change" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>
               <label className="text-sm font-semibold text-slate-700">New password<input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="Leave blank to keep it" className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]" /></label>

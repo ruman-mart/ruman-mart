@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Ruman Mart Admin",
@@ -11,7 +12,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AdminLayout() {
-  redirect("/ruman-admin-hub");
-  return null;
+export default async function SecureAdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  if (!(await getAuthenticatedUserId())) {
+    redirect("/ruman-login-hub");
+  }
+
+  return children;
 }

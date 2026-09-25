@@ -1,33 +1,40 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { uploadImage } from "@/lib/storage";
+import { uploadMedia } from "@/lib/storage";
+import { getAuthenticatedUserId } from "@/lib/auth";
 
-const allowedTypes = new Map([
+const imageTypes = new Map([
   ["image/jpeg", ".jpg"],
   ["image/png", ".png"],
   ["image/webp", ".webp"],
   ["image/gif", ".gif"],
 ]);
+const videoTypes = new Map([
+  ["video/mp4", ".mp4"],
+  ["video/webm", ".webm"],
+]);
 
 export async function POST(request: Request) {
-  if (!(await cookies()).get("ruman_session")?.value) {
+  if (!(await getAuthenticatedUserId())) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const formData = await request.formData();
   const file = formData.get("file");
-  if (!(file instanceof File)) return NextResponse.json({ message: "Image file is required." }, { status: 400 });
+  if (!(file instanceof File)) return NextResponse.json({ message: "Image or video file is required." }, { status: 400 });
 
-  const extension = allowedTypes.get(file.type);
-  if (!extension) return NextResponse.json({ message: "Only JPG, PNG, WebP, and GIF images are allowed." }, { status: 400 });
-  if (file.size > 5 * 1024 * 1024) return NextResponse.json({ message: "Image must be smaller than 5MB." }, { status: 400 });
+  const imageExtension = imageTypes.get(file.type);
+  const videoExtension = videoTypes.get(file.type);
+  const extension = imageExtension ?? videoExtension;
+  if (!extension) return NextResponse.json({ message: "Only JPG, PNG, WebP, GIF, MP4, and WebM files are allowed." }, { status: 400 });
+  const maxSize = videoExtension ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+  if (file.size > maxSize) return NextResponse.json({ message: `${videoExtension ? "Video" : "Image"} must be smaller than ${videoExtension ? "50MB" : "5MB"}.` }, { status: 400 });
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const filename = `${randomUUID()}${extension}`;
-  const cloudinaryUrl = await uploadImage(buffer, filename);
+  const cloudinaryUrl = await uploadMedia(buffer, filename, videoExtension ? "video" : "image");
   if (cloudinaryUrl) return NextResponse.json({ url: cloudinaryUrl }, { status: 201 });
 
   const uploadDirectory = path.join(process.cwd(), "public", "uploads");

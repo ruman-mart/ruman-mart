@@ -1,5 +1,7 @@
 import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
+import { cookies } from "next/headers";
+import User from "@/lib/models/User";
 
 const scrypt = promisify(scryptCallback);
 const KEY_LENGTH = 64;
@@ -21,4 +23,11 @@ export async function verifyPassword(password: string, storedHash: string) {
 
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
+}
+
+export async function getAuthenticatedUserId() {
+  const sessionId = (await cookies()).get("ruman_session")?.value;
+  if (!sessionId || !/^\d+$/.test(sessionId)) return null;
+  const user = await User.findByPk(sessionId, { attributes: ["id"] });
+  return user ? String(user.get("id")) : null;
 }

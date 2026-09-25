@@ -18,11 +18,15 @@ if (hasCloudinaryConfig) {
 }
 
 export async function uploadImage(buffer: Buffer, filename: string) {
+  return uploadMedia(buffer, filename, "image");
+}
+
+export async function uploadMedia(buffer: Buffer, filename: string, resourceType: "image" | "video") {
   if (!hasCloudinaryConfig) return null;
 
   return new Promise<string>((resolve, reject) => {
     const upload = cloudinary.uploader.upload_stream(
-      { folder: "ruman-mart", public_id: filename.replace(/\.[^/.]+$/, "") },
+      { folder: "ruman-mart", public_id: filename.replace(/\.[^/.]+$/, ""), resource_type: resourceType },
       (error, result) => {
         if (error || !result?.secure_url) {
           reject(error ?? new Error("Cloudinary did not return an image URL."));

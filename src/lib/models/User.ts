@@ -9,6 +9,7 @@ const User = sequelize.define(
     email: { type: DataTypes.STRING(190), allowNull: false, unique: true },
     phone: { type: DataTypes.STRING(30), allowNull: false },
     passwordHash: { type: DataTypes.STRING(255), allowNull: false, field: "password_hash" },
+    avatarUrl: { type: DataTypes.STRING(500), allowNull: true, field: "avatar_url" },
   },
   { tableName: "users", underscored: true, timestamps: true },
 );
