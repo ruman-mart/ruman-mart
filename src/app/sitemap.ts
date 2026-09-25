@@ -20,17 +20,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/terms",
   ];
 
-  const entries = routes.map((route) => ({
+  const entries: MetadataRoute.Sitemap = routes.map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
-    changeFrequency: route === "" || route === "/deals" ? "daily" : "weekly",
+    changeFrequency: (route === "" || route === "/deals" ? "daily" : "weekly") as "daily" | "weekly",
     priority: route === "" ? 1 : route === "/products" || route === "/categories" ? 0.9 : 0.6,
   }));
 
   try {
     const [categories, products] = await Promise.all([
-      Category.findAll({ where: { isActive: true }, attributes: ["slug"], raw: true }) as Promise<Array<{ slug: string }>>,
-      Product.findAll({ where: { isActive: true }, include: [{ association: "category", attributes: ["slug"] }], attributes: ["slug", "updatedAt"], raw: true, nest: true }) as Promise<Array<{ slug: string; updatedAt?: Date; category?: { slug?: string } }>>,
+      Category.findAll({ where: { isActive: true }, attributes: ["slug"], raw: true }) as unknown as Promise<Array<{ slug: string }>>,
+      Product.findAll({ where: { isActive: true }, include: [{ association: "category", attributes: ["slug"] }], attributes: ["slug", "updatedAt"], raw: true, nest: true }) as unknown as Promise<Array<{ slug: string; updatedAt?: Date; category?: { slug?: string } }>>,
     ]);
 
     entries.push(
