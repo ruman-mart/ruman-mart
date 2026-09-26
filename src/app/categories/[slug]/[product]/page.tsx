@@ -410,9 +410,9 @@ export default function ProductDetailsPage() {
           </div>
 
           {/* Main product section */}
-          <div className="grid grid-cols-1 gap-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-8 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             {/* Gallery */}
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row">
               <div className="scrollbar-hide flex max-w-full flex-row gap-2 overflow-x-auto sm:flex-col sm:overflow-visible">
                 {product.images.map((img, i) => (
                   <button
@@ -425,12 +425,12 @@ export default function ProductDetailsPage() {
                         : "border-slate-200 hover:border-slate-300"
                     }`}
                   >
-                    <img src={img} alt="" className="h-full w-full object-cover" />
+                    <img src={img} alt="" className="h-full w-full object-contain" />
                   </button>
                 ))}
               </div>
 
-              <div className="relative flex h-[320px] flex-1 items-center justify-center overflow-hidden rounded-xl bg-[#f5f7fb] sm:h-[420px] lg:h-[520px]">
+              <div className="relative flex h-[320px] min-w-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-[#f5f7fb] sm:h-[420px] lg:h-[520px]">
                 <WishlistButton product={{ ...product, image: product.images[0] }} />
                 {hasDiscount && (
                   <span className="absolute left-3 top-3 rounded-full bg-[#0b75a5] px-2.5 py-1 text-xs font-bold text-white">
@@ -440,7 +440,7 @@ export default function ProductDetailsPage() {
                 <img
                   src={product.images[activeImage]}
                   alt={product.name}
-                  className="h-full w-full object-cover p-2 sm:p-3"
+                  className="h-full w-full object-contain p-2 sm:p-3"
                 />
               </div>
               {product.videoUrl && (

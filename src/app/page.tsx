@@ -12,7 +12,6 @@ import Link from "next/link";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import WishlistButton from "./components/WishlistButton";
-import AddToCartButton from "./components/AddToCartButton";
 import CategoryModel from "@/lib/models/Category";
 import ProductModel from "@/lib/models/Product";
 import MarqueeStrip from "./components/MarqueeStrip";
@@ -460,8 +459,13 @@ export default async function Home() {
               {landingFeaturedProducts.slice(0, 6).map((product) => (
                 <div
                   key={product.name}
-                  className="group flex min-w-[200px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"
+                  className="group relative flex min-w-[200px] snap-start flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:min-w-0"
                 >
+                  <Link
+                    href={`/categories/${product.category.toLowerCase().replaceAll(" ", "-")}/${product.productSlug}`}
+                    aria-label={`View ${product.name} details`}
+                    className="absolute inset-0 z-10 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b75a5]"
+                  />
                   <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
                     <WishlistButton product={product} />
                     {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
@@ -489,7 +493,12 @@ export default async function Home() {
                         </span>}
                     </div>
 
-                    <AddToCartButton productSlug={product.productSlug} name={product.name} price={product.price} image={product.image} stockQuantity={product.stockQuantity} inStock={product.inStock} />
+                    <Link
+                      href={`/categories/${product.category.toLowerCase().replaceAll(" ", "-")}/${product.productSlug}`}
+                      className="relative z-20 mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                    >
+                      View Product <ChevronRight size={14} aria-hidden="true" />
+                    </Link>
                   </div>
                 </div>
               ))}
