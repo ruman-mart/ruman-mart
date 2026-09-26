@@ -33,7 +33,7 @@ const contactInfo: {
   {
     Icon: Phone,
     title: "Phone",
-    lines: ["+92 304 1298136", "Mon - Sat, 9:00 AM - 6:00 PM"],
+    lines: ["+92 304 1298136", "Mon - Sun, 10:00 AM - 10:00 PM"],
   },
   {
     Icon: Mail,
@@ -72,7 +72,7 @@ export default function ContactPage() {
       .catch(() => undefined);
   }, []);
   const dynamicContactInfo = [
-    { Icon: Phone, title: "Phone", lines: [site.storePhone, "Mon - Sat, 9:00 AM - 6:00 PM"] },
+    { Icon: Phone, title: "Phone", lines: [site.storePhone, "Mon - Sun, 10:00 AM - 10:00 PM"] },
     { Icon: Mail, title: "Email", lines: [site.storeEmail, "We reply within 24 hours"] },
     { Icon: MapPin, title: "Our Address", lines: [site.storeAddress] },
   ];
