@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
+import LoadingScreen from "../../../components/LoadingScreen";
 import WishlistButton from "../../../components/WishlistButton";
 import AddToCartButton from "../../../components/AddToCartButton";
 
@@ -319,19 +320,7 @@ export default function ProductDetailsPage() {
   }, [params.product, params.slug]);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen flex-col bg-[#f5f7fb] text-slate-800">
-        <Navbar />
-        <main className="flex flex-1 items-center justify-center px-4">
-          <div className="w-full max-w-xl rounded-xl border border-slate-200 bg-white px-8 py-12 text-center shadow-sm">
-            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#0b75a5]" />
-            <h1 className="mt-5 text-xl font-bold text-[#0b1d45]">Loading product...</h1>
-            <p className="mt-2 text-sm text-slate-500">Fetching product details.</p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
+    return <LoadingScreen title="Loading product..." description="Fetching product details." />;
   }
 
   if (!product) {

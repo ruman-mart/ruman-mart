@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import LoadingScreen from "../components/LoadingScreen";
 import AddToCartButton from "../components/AddToCartButton";
 import WishlistButton from "../components/WishlistButton";
 
@@ -40,25 +41,6 @@ const categoryFilters = [
   "Style Gadgets",
   "Perfumes",
   "Watches",
-];
-
-const allProducts: Product[] = [
-  { id: "laptop-hp", name: "Laptop 15.6\" Full HD", brand: "HP", category: "Electronics", price: 89999, originalPrice: 142999, rating: 4.6, reviews: 1200, discount: 37, image: "/products/laptop-hp.png" },
-  { id: "earbuds", name: "Wireless Earbuds", brand: "Apple", category: "Electronics", price: 7999, originalPrice: 12999, rating: 4.7, reviews: 2200, discount: 38, image: "/products/earbuds.png" },
-  { id: "smartwatch", name: "Smart Watch", brand: "Samsung", category: "Watches", price: 12999, originalPrice: 18999, rating: 4.6, reviews: 742, discount: 32, image: "/products/smartwatch.png" },
-  { id: "smartphone", name: "Smartphone 256GB", brand: "Apple", category: "Electronics", price: 149999, originalPrice: 199999, rating: 4.8, reviews: 3900, discount: 25, image: "/products/smartphone.png" },
-  { id: "tws-earphones", name: "TWS Earphones", brand: "Boat", category: "Electronics", price: 6999, originalPrice: 9999, rating: 4.4, reviews: 5300, discount: 30, image: "/products/tws-earphones.png" },
-  { id: "gaming-laptop", name: "Gaming Laptop", brand: "Asus", category: "Electronics", price: 159999, originalPrice: 199999, rating: 4.7, reviews: 966, discount: 20, image: "/products/gaming-laptop.png" },
-  { id: "bluetooth-speaker", name: "Bluetooth Speaker", brand: "JBL", category: "Electronics", price: 14599, originalPrice: 19999, rating: 4.6, reviews: 1900, discount: 27, image: "/products/bluetooth-speaker.png" },
-  { id: "air-fryer", name: "Air Fryer", brand: "Philips", category: "Kitchen Accessories", price: 15499, originalPrice: 22999, rating: 4.5, reviews: 742, discount: 32, image: "/products/air-fryer.png" },
-  { id: "bed-set", name: "Comfort Bed Set", brand: "Homeware Co.", category: "Homeware", price: 8999, originalPrice: 14999, rating: 4.8, reviews: 1100, discount: 33, image: "/products/bed-set.png" },
-  { id: "mens-perfume", name: "Men's Perfume", brand: "Bleu de Chanel", category: "Perfumes", price: 5999, originalPrice: 9999, rating: 4.6, reviews: 843, discount: 40, image: "/products/perfume.png" },
-  { id: "luxury-watch", name: "Luxury Watch", brand: "Rolex Style", category: "Watches", price: 18999, originalPrice: 28999, rating: 4.7, reviews: 920, discount: 37, image: "/products/luxury-watch.png" },
-  { id: "led-monitor", name: "LED Monitor 24\"", brand: "Samsung", category: "Electronics", price: 34999, originalPrice: 44999, rating: 4.4, reviews: 936, discount: 22, image: "/products/led-monitor.png" },
-  { id: "mechanical-keyboard", name: "Mechanical Keyboard", brand: "Redragon", category: "Style Gadgets", price: 11999, originalPrice: 18999, rating: 4.6, reviews: 674, discount: 36, image: "/products/mechanical-keyboard.png" },
-  { id: "gaming-mouse", name: "Gaming Mouse", brand: "Logitech", category: "Style Gadgets", price: 7599, originalPrice: 9999, rating: 4.8, reviews: 1100, discount: 24, image: "/products/gaming-mouse.png" },
-  { id: "power-bank", name: "Power Bank 20000mAh", brand: "Mi", category: "Electronics", price: 6999, originalPrice: 10499, rating: 4.6, reviews: 1400, discount: 33, image: "/products/power-bank.png" },
-  { id: "action-camera", name: "Action Camera", brand: "GoPro", category: "Electronics", price: 44999, originalPrice: 59999, rating: 4.7, reviews: 512, discount: 21, image: "/products/action-camera.png" },
 ];
 
 function formatPrice(price: number) {
@@ -92,7 +74,8 @@ export default function ProductsPage() {
   const [sortBy, setSortBy] = useState("popularity");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>(allProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState(categoryFilters);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -133,7 +116,10 @@ export default function ProductsPage() {
         setProducts(normalizedProducts);
         setFilters(["All", ...Array.from(new Set(normalizedProducts.map((product) => product.category)))]);
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
 
     return () => { mounted = false; };
   }, []);
@@ -163,6 +149,10 @@ export default function ProductsPage() {
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
+
+  if (isLoading) {
+    return <LoadingScreen title="Loading products..." description="Fetching the latest products." />;
+  }
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#f5f7fb] font-sans text-slate-800">
