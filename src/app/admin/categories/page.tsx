@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ImagePlus, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, CircleAlert, CircleCheck, ImagePlus, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import AdminHeader from "../components/AdminHeader";
 import AdminSidebar from "../components/AdminSidebar";
 import Pagination from "../components/Pagination";
@@ -18,6 +18,7 @@ type Category = {
 };
 
 type FormState = { name: string; slug: string; image: string; description: string; isFeatured: boolean };
+type DeleteNotice = { type: "success" | "error"; message: string };
 
 const emptyForm: FormState = { name: "", slug: "", image: "", description: "", isFeatured: false };
 
@@ -41,6 +42,7 @@ export default function AdminCategoriesPage() {
   const [imagePreview, setImagePreview] = useState("");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [deleteNotice, setDeleteNotice] = useState<DeleteNotice | null>(null);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -135,14 +137,28 @@ export default function AdminCategoriesPage() {
   async function confirmDelete() {
     if (!deleteTarget || deleting) return;
     setDeleting(true);
-    const response = await fetch(`/api/categories/${deleteTarget.id}`, {
-      method: "DELETE",
-    });
-    if (response.ok) {
+    try {
+      const response = await fetch(`/api/categories/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      const result = (await response.json().catch(() => ({}))) as { message?: string };
+      if (!response.ok) {
+        setDeleteNotice({ type: "error", message: result.message ?? "Unable to delete category. Please try again." });
+        return;
+      }
+
       setDeleteTarget(null);
-      setCategories(await fetchCategories());
+      setDeleteNotice({ type: "success", message: "Category and its products deleted successfully." });
+      try {
+        setCategories(await fetchCategories());
+      } catch {
+        setDeleteNotice({ type: "success", message: "Category and its products were deleted, but the list could not refresh. Reload the page to see the latest list." });
+      }
+    } catch {
+      setDeleteNotice({ type: "error", message: "Unable to delete category. Check your connection and try again." });
+    } finally {
+      setDeleting(false);
     }
-    setDeleting(false);
   }
 
   const filteredCategories = categories.filter((category) =>
@@ -238,7 +254,7 @@ export default function AdminCategoriesPage() {
                         <Pencil size={14} /> Edit
                       </button>
                       <button
-                        onClick={() => setDeleteTarget(category)}
+                        onClick={() => { setDeleteNotice(null); setDeleteTarget(category); }}
                         aria-label={`Delete ${category.name}`}
                         className="rounded-lg border border-rose-100 p-2 text-rose-500 hover:bg-rose-50"
                       >
@@ -261,6 +277,37 @@ export default function AdminCategoriesPage() {
           </section>
         </main>
       </div>
+
+      {deleteNotice && (
+        <div
+          role={deleteNotice.type === "error" ? "alert" : "status"}
+          className={`category-toast fixed right-4 top-4 z-[100] flex w-[min(25rem,calc(100vw-2rem))] items-start gap-3 overflow-hidden rounded-2xl border bg-white p-4 shadow-[0_18px_50px_-18px_rgba(15,23,42,0.35)] sm:right-6 sm:top-6 sm:p-5 ${
+            deleteNotice.type === "success" ? "border-emerald-200" : "border-rose-200"
+          }`}
+        >
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+            deleteNotice.type === "success" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
+          }`}>
+            {deleteNotice.type === "success" ? <CircleCheck size={23} /> : <CircleAlert size={23} />}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+              Category management
+            </p>
+            <p className={`mt-0.5 text-base font-bold ${deleteNotice.type === "success" ? "text-emerald-800" : "text-rose-800"}`}>
+              {deleteNotice.type === "success" ? "Deleted successfully" : "Delete failed"}
+            </p>
+            <p className="mt-1 text-sm leading-5 text-slate-600">{deleteNotice.message}</p>
+          </div>
+          <button
+            aria-label="Close notification"
+            onClick={() => setDeleteNotice(null)}
+            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#071b3d]/50 p-4">
@@ -390,7 +437,7 @@ export default function AdminCategoriesPage() {
               <span className="font-semibold text-slate-700">
                 {deleteTarget.name}
               </span>{" "}
-              from your categories.
+              and all products assigned to it.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button

@@ -34,12 +34,31 @@ export async function POST(request: Request) {
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const filename = `${randomUUID()}${extension}`;
-  const cloudinaryUrl = await uploadMedia(buffer, filename, videoExtension ? "video" : "image");
+  let cloudinaryUrl: string | null = null;
+  try {
+    cloudinaryUrl = await uploadMedia(buffer, filename, videoExtension ? "video" : "image");
+  } catch (error) {
+    console.error("Cloudinary upload failed:", error);
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        { message: "Image hosting is temporarily unavailable. Please try again shortly." },
+        { status: 503 },
+      );
+    }
+  }
   if (cloudinaryUrl) return NextResponse.json({ url: cloudinaryUrl }, { status: 201 });
 
   const uploadDirectory = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadDirectory, { recursive: true });
-  await writeFile(path.join(uploadDirectory, filename), buffer);
+  try {
+    await mkdir(uploadDirectory, { recursive: true });
+    await writeFile(path.join(uploadDirectory, filename), buffer);
+  } catch (error) {
+    console.error("Local upload save failed:", error);
+    return NextResponse.json(
+      { message: "The uploaded file could not be saved. Please try again." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ url: `/uploads/${filename}` }, { status: 201 });
 }

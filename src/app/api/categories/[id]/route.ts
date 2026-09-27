@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Category from "@/lib/models/Category";
+import Product from "@/lib/models/Product";
+import sequelize from "@/lib/db";
 import { runMigrations } from "@/lib/migrations";
 import { deleteStoredImage } from "@/lib/storage";
 import { getAuthenticatedUserId } from "@/lib/auth";
@@ -25,11 +27,46 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const category = await Category.findByPk((await params).id);
   if (!category) return NextResponse.json({ message: "Category not found." }, { status: 404 });
   const imageUrl = String(category.get("image"));
-  await category.destroy();
+  let productImageUrls: string[];
   try {
-    await deleteStoredImage(imageUrl);
+    productImageUrls = await sequelize.transaction(async (transaction) => {
+      const products = await Product.findAll({
+        where: { categoryId: category.get("id") },
+        attributes: ["image", "images"],
+        transaction,
+      });
+      const imageUrls = products.flatMap((product) => {
+        const image = String(product.get("image") ?? "");
+        let images: string[] = [];
+        try {
+          const parsed = JSON.parse(String(product.get("images") ?? "[]")) as unknown;
+          if (Array.isArray(parsed)) images = parsed.filter((url): url is string => typeof url === "string");
+        } catch {
+          // Keep the primary image even when optional gallery data is malformed.
+        }
+        return [image, ...images].filter(Boolean);
+      });
+      await Product.destroy({ where: { categoryId: category.get("id") }, transaction });
+      await category.destroy({ transaction });
+      return imageUrls;
+    });
   } catch (error) {
-    console.error("Category image cleanup failed:", error);
+    if (error instanceof Error && error.name === "SequelizeForeignKeyConstraintError") {
+      return NextResponse.json(
+        { message: "Unable to delete this category and its products. Please try again." },
+        { status: 409 },
+      );
+    }
+    throw error;
   }
+  await Promise.all(
+    [...new Set([imageUrl, ...productImageUrls])].map(async (url) => {
+      try {
+        await deleteStoredImage(url);
+      } catch (error) {
+        console.error("Category image cleanup failed:", error);
+      }
+    }),
+  );
   return NextResponse.json({ message: "Category deleted." });
 }
