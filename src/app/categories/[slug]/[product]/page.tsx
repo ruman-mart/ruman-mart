@@ -385,12 +385,8 @@ export default function ProductDetailsPage() {
               Home
             </Link>
             <ChevronRight size={14} className="text-slate-400" aria-hidden="true" />
-            <Link href="/categories/electronics" className="hover:text-[#0b75a5]">
-              Electronics
-            </Link>
-            <ChevronRight size={14} className="text-slate-400" aria-hidden="true" />
-            <Link href="/categories/electronics" className="hover:text-[#0b75a5]">
-              Laptops
+            <Link href={`/categories/${params.slug}`} className="hover:text-[#0b75a5]">
+              {product.categoryName}
             </Link>
             <ChevronRight size={14} className="text-slate-400" aria-hidden="true" />
             <span className="font-semibold text-[#0b1d45]">

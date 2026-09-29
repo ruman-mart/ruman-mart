@@ -81,12 +81,12 @@ export default function AdminCategoriesPage() {
     setEditingId(category.id);
     setForm({
       name: category.name,
-      slug: category.slug,
+      slug: slugify(category.name),
       image: category.image,
       description: category.description ?? "",
       isFeatured: category.isFeatured,
     });
-    setSlugEdited(true);
+    setSlugEdited(false);
     setImageFile(null);
     setImagePreview(category.image);
     setMessage("");
@@ -354,7 +354,7 @@ export default function AdminCategoriesPage() {
                   value={slugEdited ? form.slug : slugify(form.name)}
                   onChange={(event) => {
                     setSlugEdited(true);
-                    setForm({ ...form, slug: event.target.value });
+                    setForm((current) => ({ ...current, slug: slugify(event.target.value) }));
                   }}
                   className="mt-2 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-normal outline-none focus:border-[#1fb6e6]"
                   placeholder="electronics"

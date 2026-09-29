@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { notFound } from "next/navigation";
+import { Op, col, fn, where } from "sequelize";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import WishlistButton from "../../components/WishlistButton";
@@ -70,7 +71,7 @@ const categoryData: Record<string, Category> = {
 };
 
 async function getCategory(slug: string): Promise<Category | undefined> {
-  const databaseCategory = (await CategoryModel.findOne({ where: { slug, isActive: true }, raw: true })) as unknown as { id: number; name: string; description: string | null } | null;
+  const databaseCategory = (await CategoryModel.findOne({ where: { isActive: true, [Op.and]: where(fn("LOWER", col("slug")), slug.toLowerCase()) }, raw: true })) as unknown as { id: number; name: string; description: string | null } | null;
   if (databaseCategory) {
     const databaseProducts = (await ProductModel.findAll({ attributes: ["name", "brand", "price", "originalPrice", "rating", "reviews", "image"], where: { categoryId: databaseCategory.id, isActive: true }, order: [["createdAt", "DESC"]], raw: true })) as unknown as Array<{ name: string; brand: string; price: number; originalPrice: number; rating: number | string; reviews: number; image: string }>;
     if (databaseProducts.length || !categoryData[slug]) {

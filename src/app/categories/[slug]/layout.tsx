@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Op, col, fn, where } from "sequelize";
 import Category from "@/lib/models/Category";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const category = await Category.findOne({ where: { slug, isActive: true }, raw: true }) as { name?: string; description?: string; image?: string } | null;
+  const category = await Category.findOne({ where: { isActive: true, [Op.and]: where(fn("LOWER", col("slug")), slug.toLowerCase()) }, raw: true }) as { name?: string; description?: string; image?: string } | null;
   const name = category?.name ?? slug.replaceAll("-", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
   const description = category?.description ?? `Shop ${name} products at Ruman Mart with reliable delivery across Pakistan.`;
   const image = category?.image;

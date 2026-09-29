@@ -6,6 +6,10 @@ import { runMigrations } from "@/lib/migrations";
 import { deleteStoredImage } from "@/lib/storage";
 import { getAuthenticatedUserId } from "@/lib/auth";
 
+function slugify(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 async function authorized() {
   return Boolean(await getAuthenticatedUserId());
 }
@@ -17,7 +21,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const category = await Category.findByPk(id);
   if (!category) return NextResponse.json({ message: "Category not found." }, { status: 404 });
   const body = (await request.json()) as { name?: string; slug?: string; image?: string; description?: string; isActive?: boolean; isFeatured?: boolean };
-  await category.update({ name: body.name?.trim(), slug: body.slug?.trim(), image: body.image?.trim(), description: body.description?.trim(), isActive: body.isActive, isFeatured: body.isFeatured });
+  await category.update({ name: body.name?.trim(), slug: body.slug === undefined ? undefined : slugify(body.slug), image: body.image?.trim(), description: body.description?.trim(), isActive: body.isActive, isFeatured: body.isFeatured });
   return NextResponse.json(category);
 }
 
