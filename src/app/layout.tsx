@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import CookieConsent from "./components/CookieConsent";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import NavigationProgress from "./components/NavigationProgress";
 
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <NavigationProgress />
         {children}
+        <CookieConsent />
         <FloatingWhatsApp />
       </body>
     </html>

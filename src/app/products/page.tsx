@@ -17,6 +17,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import LoadingScreen from "../components/LoadingScreen";
 import AddToCartButton from "../components/AddToCartButton";
+import ProductShareButton from "../components/ProductShareButton";
 import WishlistButton from "../components/WishlistButton";
 
 type Product = {
@@ -403,7 +404,7 @@ export default function ProductsPage() {
       <article key={product.id} className="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
         <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
           <WishlistButton product={product} />
-          {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">-{product.discount}%</span>}
+          {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 z-40 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">-{product.discount}%</span>}
           <img src={product.image} alt={product.name} className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105" />
         </div>
         <div className="flex flex-1 flex-col gap-1 px-4 pb-4 pt-3">
@@ -413,9 +414,15 @@ export default function ProductsPage() {
             <span className="text-base font-bold text-[#0b1d45]">{formatPrice(product.price)}</span>
             {product.originalPrice > product.price && product.discount > 0 && <span className="text-xs text-slate-400 line-through">{formatPrice(product.originalPrice)}</span>}
           </div>
-          <Link href={`/categories/${product.categorySlug || slugify(product.category)}/${product.id}`} className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90">
-            View Product <ChevronRight size={14} aria-hidden="true" />
-          </Link>
+          <div className="mt-2 flex items-center gap-2">
+            <Link href={`/categories/${product.categorySlug || slugify(product.category)}/${product.id}`} className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90">
+              View Product <ChevronRight size={14} aria-hidden="true" />
+            </Link>
+            <ProductShareButton
+              productName={product.name}
+              productUrl={`/categories/${product.categorySlug || slugify(product.category)}/${product.id}`}
+            />
+          </div>
         </div>
       </article>
     ))}
@@ -467,8 +474,11 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Add to Cart */}
-        <div className="flex w-full shrink-0 items-center sm:w-auto">
+        <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
+          <ProductShareButton
+            productName={product.name}
+            productUrl={`/categories/${product.categorySlug || slugify(product.category)}/${product.id}`}
+          />
           <AddToCartButton productSlug={product.id} name={product.name} price={product.price} image={product.image} />
         </div>
       </article>

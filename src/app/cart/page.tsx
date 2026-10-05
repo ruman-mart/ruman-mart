@@ -49,7 +49,7 @@ type RelatedProduct = {
 };
 
 const trustBadges: { Icon: LucideIcon; title: string; subtitle: string }[] = [
-  { Icon: Truck, title: "Nationwide Delivery", subtitle: "Rs. 200 - Rs. 250 shipping" },
+  { Icon: Truck, title: "Nationwide Delivery", subtitle: "Fast shipping across the country" },
   { Icon: ShieldCheck, title: "Secure Payments", subtitle: "100% secure checkout" },
   { Icon: Award, title: "Quality Products", subtitle: "Carefully selected for you" },
   { Icon: Headset, title: "24/7 Support", subtitle: "We're here to help" },

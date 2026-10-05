@@ -15,7 +15,6 @@ import {
   ShoppingCart,
   Zap,
   Heart,
-  Share2,
   Minus,
   Plus,
   Check,
@@ -25,6 +24,7 @@ import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
 import LoadingScreen from "../../../components/LoadingScreen";
 import WishlistButton from "../../../components/WishlistButton";
+import ProductShareButton from "../../../components/ProductShareButton";
 import AddToCartButton from "../../../components/AddToCartButton";
 
 type RelatedProduct = {
@@ -575,6 +575,11 @@ export default function ProductDetailsPage() {
                     <Zap size={16} aria-hidden="true" />
                     Buy Now
                   </button>
+                  <ProductShareButton
+                    productName={product.name}
+                    productUrl={`/categories/${params.slug}/${params.product}`}
+                    className="self-center sm:self-auto"
+                  />
                 </div>
               </div>
 

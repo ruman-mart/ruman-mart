@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ProductShareButton from "./components/ProductShareButton";
 import WishlistButton from "./components/WishlistButton";
 import CategoryModel from "@/lib/models/Category";
 import ProductModel from "@/lib/models/Product";
@@ -263,7 +264,7 @@ export default async function Home() {
     aria-hidden="true"
   />
 
-  <div className="relative mx-auto flex min-h-[380px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[360px] md:min-h-[470px] md:px-8 lg:min-h-[520px]">
+  <div className="relative mx-auto flex min-h-[420px] max-w-[1800px] items-center px-5 py-8 sm:min-h-[400px] md:min-h-[510px] md:px-8 lg:min-h-[560px]">
     <div className="max-w-xl text-white">
 
       <p className="mb-3 hidden text-xs font-semibold uppercase tracking-[0.22em] text-slate-200 sm:block sm:text-sm">
@@ -468,7 +469,7 @@ export default async function Home() {
                   />
                   <div className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-white">
                     <WishlistButton product={product} />
-                    {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
+                    {product.originalPrice > product.price && product.discount > 0 && <span className="absolute right-2 top-2 z-40 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
                         -{product.discount}%
                       </span>}
                     <img
@@ -493,12 +494,18 @@ export default async function Home() {
                         </span>}
                     </div>
 
-                    <Link
-                      href={`/categories/${product.category.toLowerCase().replaceAll(" ", "-")}/${product.productSlug}`}
-                      className="relative z-20 mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-                    >
-                      View Product <ChevronRight size={14} aria-hidden="true" />
-                    </Link>
+                    <div className="relative z-20 mt-2 flex items-center gap-2">
+                      <Link
+                        href={`/categories/${product.category.toLowerCase().replaceAll(" ", "-")}/${product.productSlug}`}
+                        className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                      >
+                        View Product <ChevronRight size={14} aria-hidden="true" />
+                      </Link>
+                      <ProductShareButton
+                        productName={product.name}
+                        productUrl={`/categories/${product.category.toLowerCase().replaceAll(" ", "-")}/${product.productSlug}`}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}

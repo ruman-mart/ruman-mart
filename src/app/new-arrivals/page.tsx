@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight, Home as HomeIcon } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import ProductShareButton from "../components/ProductShareButton";
 import WishlistButton from "../components/WishlistButton";
 import ProductModel from "@/lib/models/Product";
 
@@ -244,7 +245,7 @@ export default async function NewArrivalsPage({ searchParams }: { searchParams: 
         <div className="relative flex h-40 items-center justify-center bg-white px-4 pt-4">
           <WishlistButton product={product} />
 
-          <span className="absolute right-2 top-2 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
+          <span className="absolute right-2 top-2 z-40 rounded-full bg-[#0b75a5] px-2 py-0.5 text-[11px] font-bold text-white">
             New
           </span>
 
@@ -270,13 +271,19 @@ export default async function NewArrivalsPage({ searchParams }: { searchParams: 
             </span>
           </div>
 
-          <Link
-            href={`/categories/${product.categorySlug ?? "electronics"}/${productSlug(product.name)}`}
-            className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
-          >
-            View Product
-            <ArrowRight size={14} aria-hidden="true" />
-          </Link>
+          <div className="mt-2 flex items-center gap-2">
+            <Link
+              href={`/categories/${product.categorySlug ?? "electronics"}/${productSlug(product.name)}`}
+              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-[radial-gradient(circle_at_top,#2b5b9a_0%,#0b3268_55%,#06234d_100%)] py-2 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              View Product
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+            <ProductShareButton
+              productName={product.name}
+              productUrl={`/categories/${product.categorySlug ?? "electronics"}/${productSlug(product.name)}`}
+            />
+          </div>
         </div>
       </article>
     ))}
