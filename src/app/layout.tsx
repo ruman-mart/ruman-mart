@@ -61,6 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <link rel="icon" href="/favicon.jpeg" type="image/jpeg" />
         <link rel="shortcut icon" href="/favicon.jpeg" type="image/jpeg" />
+        <meta name="facebook-domain-verification" content="f3rccsvql2nxqtp7uye4n54cojkj7g" />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <NavigationProgress />
