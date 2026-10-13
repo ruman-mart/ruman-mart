@@ -20,6 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Meta Pixel
+
+Set `NEXT_PUBLIC_META_PIXEL_ID` to the numeric Pixel ID in the deployment environment. The browser Pixel and server-side Conversions API operate independently of the cookie banner choice. The Pixel tracks PageView, ViewContent, AddToCart, InitiateCheckout, and Purchase events in PKR.
+
+To enable server-side Purchase events, set `META_CAPI_ACCESS_TOKEN` as a server-only environment variable; never expose it with a `NEXT_PUBLIC_` prefix or commit its value. `META_GRAPH_API_VERSION` and `META_TEST_EVENT_CODE` are optional. Browser and server Purchase events use the order number as their shared event ID for Meta deduplication.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

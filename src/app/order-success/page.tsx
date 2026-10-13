@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -16,9 +16,11 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AddToCartButton from "../components/AddToCartButton";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 type OrderItem = {
   id?: string;
+  productSlug?: string;
   name: string;
   brand?: string;
   qty?: number;
@@ -94,6 +96,8 @@ export default function OrderSuccessPage() {
 function OrderSuccessPageContent() {
   const searchParams = useSearchParams();
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
+  const [hasConfirmedOrder, setHasConfirmedOrder] = useState(false);
+  const purchaseSent = useRef(false);
   const [orderDetails, setOrderDetails] = useState<OrderSnapshot>({
     orderNumber: searchParams.get("order") ?? "RM-000000",
     orderDate: new Date().toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }),
@@ -110,7 +114,13 @@ function OrderSuccessPageContent() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as Partial<OrderSnapshot>;
-        if (parsed.orderNumber || parsed.items?.length) {
+        const requestedOrderNumber = searchParams.get("order");
+        const savedOrderNumber = parsed.orderNumber?.replace(/^#/, "");
+        if (
+          savedOrderNumber &&
+          requestedOrderNumber === savedOrderNumber &&
+          parsed.items?.length
+        ) {
           setOrderDetails({
             orderNumber: parsed.orderNumber ? `#${parsed.orderNumber}` : "#RM-000000",
             orderDate: parsed.orderDate ? new Date(parsed.orderDate).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }) : new Date().toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" }),
@@ -125,12 +135,13 @@ function OrderSuccessPageContent() {
             discount: Number(parsed.discount ?? 0),
             total: Number(parsed.total ?? (parsed.subtotal ?? 0)),
           });
+          setHasConfirmedOrder(true);
         }
       } catch {
         // ignore malformed saved order data
       }
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     const orderNames = new Set(orderDetails.items.map((item) => item.name));
@@ -186,6 +197,42 @@ function OrderSuccessPageContent() {
   const shipping = orderDetails.shippingCost;
   const discount = orderDetails.discount;
   const total = orderDetails.total || subtotal + shipping - discount;
+
+  useEffect(() => {
+    if (!hasConfirmedOrder || purchaseSent.current) return;
+    const eventId = orderDetails.orderNumber.replace(/^#/, "");
+    const storageKey = `ruman-meta-purchase-${eventId}`;
+
+    try {
+      if (localStorage.getItem(storageKey)) {
+        purchaseSent.current = true;
+        return;
+      }
+      localStorage.setItem(storageKey, "1");
+    } catch (error) {
+      console.error("Unable to persist Meta Purchase deduplication state:", error);
+      return;
+    }
+
+    purchaseSent.current = true;
+    const contents = orderDetails.items.map((item) => ({
+      id: item.productSlug || item.id || "",
+      quantity: Number(item.qty ?? item.quantity ?? 1),
+      item_price: item.price,
+    }));
+    trackMetaEvent(
+      "Purchase",
+      {
+        content_ids: contents.map((item) => item.id).filter(Boolean),
+        contents,
+        content_type: "product",
+        value: total,
+        currency: "PKR",
+        num_items: contents.reduce((sum, item) => sum + item.quantity, 0),
+      },
+      eventId,
+    );
+  }, [hasConfirmedOrder, orderDetails, total]);
 
   const displayItems = orderDetails.items.length ? orderDetails.items : orderItems;
 

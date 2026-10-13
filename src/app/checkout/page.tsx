@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 type OrderItem = {
   id: string;
@@ -89,6 +90,7 @@ export default function CheckoutPage() {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderError, setOrderError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const checkoutEventSent = useRef(false);
 
   useEffect(() => {
     void fetch("/api/settings/shipping")
@@ -142,6 +144,24 @@ export default function CheckoutPage() {
   const availablePaymentMethods = advanceShipping
     ? [{ id: "advance-shipping", Icon: Truck, title: "Shipping Advance", subtitle: "Pay shipping charges in advance" }]
     : paymentMethods;
+
+  useEffect(() => {
+    if (!orderItems.length || checkoutEventSent.current) return;
+    checkoutEventSent.current = true;
+    const contents = orderItems.map((item) => ({
+      id: item.productSlug || item.id,
+      quantity: item.qty,
+      item_price: item.price,
+    }));
+    trackMetaEvent("InitiateCheckout", {
+      content_ids: contents.map((item) => item.id),
+      contents,
+      content_type: "product",
+      value: subtotal,
+      currency: "PKR",
+      num_items: orderItems.reduce((sum, item) => sum + item.qty, 0),
+    });
+  }, [orderItems, subtotal]);
 
   async function handlePlaceOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

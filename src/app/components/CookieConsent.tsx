@@ -49,8 +49,7 @@ export default function CookieConsent() {
           <div>
             <h2 className="text-sm font-bold text-[#0b1d45]">Your cookie choices</h2>
             <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">
-              We use necessary cookies to keep the store working and remember your choice.
-              You can allow all cookies or keep only the necessary ones.{" "}
+              Your choice controls site cookies. Meta Pixel advertising measurement works independently of this banner and may send website activity to Meta. You can allow all cookies or keep only necessary ones.{" "}
               <Link
                 href="/privacy-policy"
                 className="font-semibold text-[#0b75a5] underline underline-offset-2 hover:text-[#064d70]"

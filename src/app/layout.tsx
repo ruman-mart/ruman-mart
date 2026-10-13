@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import CookieConsent from "./components/CookieConsent";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
+import MetaPixel from "./components/MetaPixel";
 import NavigationProgress from "./components/NavigationProgress";
 
 const geistSans = Geist({
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <NavigationProgress />
         {children}
+        <MetaPixel />
         <CookieConsent />
         <FloatingWhatsApp />
       </body>

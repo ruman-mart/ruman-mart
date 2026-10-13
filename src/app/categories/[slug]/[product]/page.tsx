@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,6 +26,7 @@ import LoadingScreen from "../../../components/LoadingScreen";
 import WishlistButton from "../../../components/WishlistButton";
 import ProductShareButton from "../../../components/ProductShareButton";
 import AddToCartButton from "../../../components/AddToCartButton";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 type RelatedProduct = {
   slug: string;
@@ -176,8 +177,21 @@ export default function ProductDetailsPage() {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([]);
   const [activeTab, setActiveTab] = useState<"description" | "specifications" | "reviews">("description");
+  const lastViewedProduct = useRef<string | null>(null);
   const hasDiscount = product ? product.originalPrice > product.price && product.discount > 0 : false;
   const hasStock = product ? product.inStock && product.stockQuantity > 0 : false;
+
+  useEffect(() => {
+    if (!product || lastViewedProduct.current === params.product) return;
+    lastViewedProduct.current = params.product;
+    trackMetaEvent("ViewContent", {
+      content_ids: [params.product],
+      content_name: product.name,
+      content_type: "product",
+      value: product.price,
+      currency: "PKR",
+    });
+  }, [params.product, product]);
 
   function handleAddToCart(destination = "/cart") {
     if (!product || !hasStock) return;
@@ -208,6 +222,15 @@ export default function ProductDetailsPage() {
       cartItems.push(cartItem);
     }
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    trackMetaEvent("AddToCart", {
+      content_ids: [params.product],
+      content_name: product.name,
+      content_type: "product",
+      value: product.price * quantity,
+      currency: "PKR",
+      contents: [{ id: params.product, quantity, item_price: product.price }],
+      num_items: quantity,
+    });
     window.dispatchEvent(new Event("ruman-cart-updated"));
     router.push(destination);
   }

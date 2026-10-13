@@ -3,6 +3,7 @@
 import { ShoppingCart } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { trackMetaEvent } from "@/lib/meta-pixel";
 
 const CART_STORAGE_KEY = "ruman-cart";
 
@@ -31,6 +32,15 @@ export default function AddToCartButton({ productSlug, name, price, image, stock
       items.push({ id: productSlug, productSlug, name, specs: [], price, quantity: 1, inStock, stockQuantity, image });
     }
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    trackMetaEvent("AddToCart", {
+      content_ids: [productSlug],
+      content_name: name,
+      content_type: "product",
+      value: price,
+      currency: "PKR",
+      contents: [{ id: productSlug, quantity: 1, item_price: price }],
+      num_items: 1,
+    });
     window.dispatchEvent(new Event("ruman-cart-updated"));
     setAdded(true);
     router.push("/cart");

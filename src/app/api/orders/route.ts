@@ -4,6 +4,7 @@ import Product from "@/lib/models/Product";
 import sequelize from "@/lib/db";
 import { runMigrations } from "@/lib/migrations";
 import { getAuthenticatedUserId } from "@/lib/auth";
+import { sendMetaPurchase } from "@/lib/meta-conversions";
 
 type OrderItem = {
   id: string;
@@ -116,7 +117,27 @@ export async function POST(request: Request) {
       }, { transaction });
     });
 
-    return NextResponse.json({ orderNumber: order.get("orderNumber") }, { status: 201 });
+    const orderNumber = String(order.get("orderNumber"));
+    try {
+      await sendMetaPurchase({
+        request,
+        eventId: orderNumber,
+        value: total,
+        items: items.map((item) => ({
+          id: item.id,
+          productSlug: item.productSlug,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+        })),
+        email,
+        phone,
+      });
+    } catch (error) {
+      console.error("Meta Conversions API Purchase delivery failed:", error);
+    }
+
+    return NextResponse.json({ orderNumber, eventId: orderNumber }, { status: 201 });
   } catch (error) {
     console.error("Order creation failed:", error);
     return NextResponse.json({ message: error instanceof Error ? error.message : "Unable to place order." }, { status: 500 });
