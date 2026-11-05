@@ -26,6 +26,18 @@ Set `NEXT_PUBLIC_META_PIXEL_ID` to the numeric Pixel ID in the deployment enviro
 
 To enable server-side Purchase events, set `META_CAPI_ACCESS_TOKEN` as a server-only environment variable; never expose it with a `NEXT_PUBLIC_` prefix or commit its value. `META_GRAPH_API_VERSION` and `META_TEST_EVENT_CODE` are optional. Browser and server Purchase events use the order number as their shared event ID for Meta deduplication.
 
+## Cloudflare R2 uploads
+
+Uploads use Cloudflare R2 when all of these server-side environment variables are set:
+
+- `R2_ACCOUNT_ID`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+- `R2_BUCKET_NAME`
+- `R2_PUBLIC_URL`
+
+Create an R2 API token with read and write access scoped to the upload bucket. Set `R2_PUBLIC_URL` to the bucket's public custom domain or enabled `r2.dev` URL so uploaded files can be viewed publicly. Keep the access key and secret private; do not use a `NEXT_PUBLIC_` prefix. R2 uploads are stored under `uploads/`, and deleting a product or category also deletes its R2 objects. When R2 is not configured, existing Cloudinary and local-upload behavior remains available.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

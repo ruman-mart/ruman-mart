@@ -34,19 +34,19 @@ export async function POST(request: Request) {
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const filename = `${randomUUID()}${extension}`;
-  let cloudinaryUrl: string | null = null;
+  let hostedUrl: string | null = null;
   try {
-    cloudinaryUrl = await uploadMedia(buffer, filename, videoExtension ? "video" : "image");
+    hostedUrl = await uploadMedia(buffer, filename, videoExtension ? "video" : "image", file.type);
   } catch (error) {
-    console.error("Cloudinary upload failed:", error);
+    console.error("Media upload failed:", error);
     if (process.env.NODE_ENV === "production") {
       return NextResponse.json(
-        { message: "Image hosting is temporarily unavailable. Please try again shortly." },
+        { message: "Media storage is temporarily unavailable. Please try again shortly." },
         { status: 503 },
       );
     }
   }
-  if (cloudinaryUrl) return NextResponse.json({ url: cloudinaryUrl }, { status: 201 });
+  if (hostedUrl) return NextResponse.json({ url: hostedUrl }, { status: 201 });
 
   const uploadDirectory = path.join(process.cwd(), "public", "uploads");
   try {

@@ -5,7 +5,6 @@ import CookieConsent from "./components/CookieConsent";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import MetaPixel from "./components/MetaPixel";
 import NavigationProgress from "./components/NavigationProgress";
-import MaintenanceOverlay from "./components/MaintenanceOverlay";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,7 +64,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <meta name="facebook-domain-verification" content="f3rccsvql2nxqtp7uye4n54cojkj7g" />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col">
-        <MaintenanceOverlay />
         <NavigationProgress />
         {children}
         <MetaPixel />
